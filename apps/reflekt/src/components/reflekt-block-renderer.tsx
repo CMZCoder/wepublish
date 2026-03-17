@@ -1,5 +1,6 @@
-import { css } from '@emotion/react';
+import { css, Theme } from '@emotion/react';
 import { useTheme } from '@emotion/react';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { BlockRenderer } from '@wepublish/block-content/website';
 import { ImageContext } from '@wepublish/image/website';
 import { BlockContent } from '@wepublish/website/api';
@@ -8,27 +9,24 @@ import {
   BuilderBlocksProps,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
-import { cond } from 'ramda';
+import { allPass, cond } from 'ramda';
 import type { ComponentProps, ComponentType } from 'react';
 import { memo, useMemo } from 'react';
 
 import { isFlexBlockHero } from './block-layouts/flex-block-hero';
 import {
-  isCollapsibleDownloads,
-  ReflektCollapsibleDownloads,
-} from './block-styles/reflekt-collapsible-downloads';
-import {
-  isCollapsibleRichText,
-  ReflektCollapsibleRichText,
-} from './block-styles/reflekt-collapsible-richtext';
-import {
   isReflektImageBlockFullsize,
   ReflektImageBlockFullsize,
 } from './block-styles/reflekt-image-block-fullsize';
 import {
-  isTocRichText,
-  ReflektTocRichText,
-} from './block-styles/reflekt-toc-richtext';
+  isCollapsibleContent,
+  ReflektCollapsibleContent,
+} from './break-blocks/reflekt-collapsible-content';
+import {
+  isCollapsibleDownloads,
+  ReflektCollapsibleDownloads,
+} from './break-blocks/reflekt-collapsible-downloads';
+import { isToc, ReflektToc } from './break-blocks/reflekt-toc';
 import {
   isTextWithImageBreakBlock,
   TextWithImageBreakBlock,
@@ -38,14 +36,15 @@ import {
   TextWithImageAltColorBreakBlock,
 } from './break-blocks/text-with-image-alt-color';
 import { MainSpacer } from './main-spacer';
+import { isTeaserSlotsTopic } from './teaser-layouts/teaser-slots-topic';
 
 export type BlockSiblings = Array<{
   typeName: string;
   blockStyle?: string;
 }>;
 
-type CollapsibleRichTextWithSiblings = ComponentType<
-  ComponentProps<typeof ReflektCollapsibleRichText> & {
+type CollapsibleContentWithSiblings = ComponentType<
+  ComponentProps<typeof ReflektCollapsibleContent> & {
     siblings?: BlockSiblings;
   }
 >;
@@ -54,15 +53,15 @@ type CollapsibleDownloadsWithSiblings = ComponentType<
     siblings?: BlockSiblings;
   }
 >;
-type TocRichTextWithSiblings = ComponentType<
-  ComponentProps<typeof ReflektTocRichText> & { siblings?: BlockSiblings }
+type TocWithSiblings = ComponentType<
+  ComponentProps<typeof ReflektToc> & { siblings?: BlockSiblings }
 >;
 
-const CollapsibleRichText =
-  ReflektCollapsibleRichText as CollapsibleRichTextWithSiblings;
+const CollapsibleContent =
+  ReflektCollapsibleContent as CollapsibleContentWithSiblings;
 const CollapsibleDownloads =
   ReflektCollapsibleDownloads as CollapsibleDownloadsWithSiblings;
-const TocRichText = ReflektTocRichText as TocRichTextWithSiblings;
+const Toc = ReflektToc as TocWithSiblings;
 
 const isBreakBlockTextWithImage = isTextWithImageBreakBlock as (
   b: BlockContent
@@ -75,14 +74,17 @@ export const ReflektBlockRenderer = (
   props: BuilderBlockRendererProps & { siblings: BlockSiblings }
 ) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('md')
+  );
 
   const extraBlockMap: (block: BlockContent) => JSX.Element | null = useMemo(
     () =>
       cond([
         [
-          isCollapsibleRichText,
+          isCollapsibleContent,
           block => (
-            <CollapsibleRichText
+            <CollapsibleContent
               {...(block as any)}
               siblings={props.siblings}
             />
@@ -116,9 +118,9 @@ export const ReflektBlockRenderer = (
           ),
         ],
         [
-          isTocRichText,
+          isToc,
           block => (
-            <TocRichText
+            <Toc
               {...(block as any)}
               siblings={props.siblings}
             />
@@ -142,8 +144,15 @@ export const ReflektBlockRenderer = (
             padding: 0 !important;
           `,
         ],
+        [
+          allPass([isTeaserSlotsTopic, () => isMobile]),
+          () => css`
+            grid-template-columns: auto !important;
+            padding: 0 !important;
+          `,
+        ],
       ]),
-    [theme]
+    [theme, isMobile]
   );
 
   if (props.type === 'Page') {

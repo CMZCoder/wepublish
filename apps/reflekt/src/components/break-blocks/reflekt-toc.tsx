@@ -1,14 +1,10 @@
 import styled from '@emotion/styled';
 import { Typography } from '@mui/material';
+import { hasBlockStyle, isBreakBlock } from '@wepublish/block-content/website';
+import { BlockContent } from '@wepublish/website/api';
+import { BreakBlock as BreakBlockType } from '@wepublish/website/api';
 import {
-  hasBlockStyle,
-  isRichTextBlock,
-} from '@wepublish/block-content/website';
-import {
-  BlockContent,
-  RichTextBlock as RichTextBlockType,
-} from '@wepublish/website/api';
-import {
+  BuilderBreakBlockProps,
   BuilderRichTextBlockProps,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
@@ -19,9 +15,9 @@ type ReflektRichTextBlockType = ComponentType<
   BuilderRichTextBlockProps & { variant?: string }
 >;
 
-import { ReflektBlockType } from './reflekt-block-styles';
+import { ReflektBlockType } from '../block-styles/reflekt-block-styles';
 
-export const ReflektTocRichTextWrapper = styled('div')`
+export const ReflektTocWrapper = styled('div')`
   margin: 0;
   background-color: ${({ theme }) => theme.palette.secondary.dark};
   color: ${({ theme }) => theme.palette.common.white};
@@ -50,17 +46,18 @@ export const TocDetails = styled(Typography)`
   }
 `;
 
-export const isTocRichText = (
+export const isToc = (
   block: Pick<BlockContent, '__typename'>
-): block is RichTextBlockType =>
-  allPass([hasBlockStyle(ReflektBlockType.TableOfContents), isRichTextBlock])(
+): block is BreakBlockType =>
+  allPass([hasBlockStyle(ReflektBlockType.TableOfContents), isBreakBlock])(
     block
   );
 
-export const ReflektTocRichText = ({
+export const ReflektToc = ({
   className,
+  text,
   richText,
-}: BuilderRichTextBlockProps) => {
+}: BuilderBreakBlockProps) => {
   const {
     blocks: { RichText },
   } = useWebsiteBuilder();
@@ -68,20 +65,16 @@ export const ReflektTocRichText = ({
   const ReflektRichText = RichText as ReflektRichTextBlockType;
 
   return (
-    <ReflektTocRichTextWrapper className={className}>
-      <TocTitle variant="tocHeading">
-        {richText &&
-          richText.length > 0 &&
-          (richText[0] as any).children[0].text}
-      </TocTitle>
+    <ReflektTocWrapper className={className}>
+      <TocTitle variant="tocHeading">{text}</TocTitle>
       <TocDetails variant="tocDetails">
-        {richText && richText.length > 1 && (
+        {richText && (
           <ReflektRichText
-            richText={[...richText].splice(1, richText.length - 1)}
+            richText={richText}
             variant="toc"
           />
         )}
       </TocDetails>
-    </ReflektTocRichTextWrapper>
+    </ReflektTocWrapper>
   );
 };

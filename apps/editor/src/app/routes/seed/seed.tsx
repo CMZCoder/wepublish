@@ -26,9 +26,9 @@ import {
   PropertyInput,
   QuoteBlockInput,
   RichTextBlockInput,
+  SubscribeBlockInput,
   SubscriptionFlowsDocument,
   SubscriptionListDocument,
-  SubscribeBlockInput,
   Tag,
   TagListDocument,
   TagListQueryVariables,
@@ -298,22 +298,20 @@ const updateToc = (
 ): BlockContentInput[] => {
   return blocks.map(block => {
     if (
-      'richText' in block &&
-      block.richText?.blockStyle ===
+      'linkPageBreak' in block &&
+      block.linkPageBreak?.blockStyle ===
         getBlockStyle(blockStyles, 'TableOfContents')
     ) {
       return {
-        richText: {
-          blockStyle: block.richText?.blockStyle,
+        linkPageBreak: {
+          blockStyle: block.linkPageBreak?.blockStyle,
+          hideButton: false,
+          imageID: null,
+          linkTarget: null,
+          linkText: null,
+          linkURL: null,
+          text: 'Kapitel',
           richText: [
-            {
-              type: 'heading-one',
-              children: [
-                {
-                  text: 'Kapitel',
-                },
-              ],
-            },
             {
               type: 'unordered-list',
               children: headings.map(heading => ({
@@ -433,19 +431,17 @@ const createArticleBlocksInput = (
       } as TitleBlockInput,
     } as BlockContentInput,
 
-    // a collapsible rich text block
+    // a collapsible content block
     {
-      richText: {
-        blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+      linkPageBreak: {
+        hideButton: false,
+        imageID: null,
+        linkTarget: null,
+        linkText: null,
+        linkURL: null,
+        blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
+        text: 'Das Wichtigste in Kürze',
         richText: [
-          {
-            type: 'heading-one',
-            children: [
-              {
-                text: 'Das Wichtigste in Kürze',
-              },
-            ],
-          },
           {
             type: 'unordered-list',
             children: [
@@ -536,19 +532,17 @@ const createArticleBlocksInput = (
       } as ImageBlockInput,
     } as BlockContentInput,
 
-    // a table of contents rich text block
+    // a table of contents toc block
     {
-      richText: {
+      linkPageBreak: {
+        hideButton: false,
+        imageID: null,
+        linkTarget: null,
+        linkText: null,
+        linkURL: null,
         blockStyle: getBlockStyle(blockStyles, 'TableOfContents'),
+        text: 'Kapitel',
         richText: [
-          {
-            type: 'heading-one',
-            children: [
-              {
-                text: 'Kapitel',
-              },
-            ],
-          },
           {
             type: 'unordered-list',
             children: [
@@ -591,7 +585,7 @@ const createArticleBlocksInput = (
             ],
           },
         ] as Descendant[],
-      } as RichTextBlockInput,
+      } as BreakBlockInput,
     } as BlockContentInput,
 
     // a rich text block
@@ -699,17 +693,15 @@ const createArticleBlocksInput = (
 
     // a collapsible downloads list block
     {
-      richText: {
+      linkPageBreak: {
+        hideButton: false,
+        imageID: null,
+        linkTarget: null,
+        linkText: null,
+        linkURL: null,
         blockStyle: getBlockStyle(blockStyles, 'CollapsibleDownloads'),
+        text: 'Downloads',
         richText: [
-          {
-            type: 'heading-one',
-            children: [
-              {
-                text: 'Downloads',
-              },
-            ],
-          },
           {
             type: 'unordered-list',
             children: [
@@ -749,7 +741,7 @@ const createArticleBlocksInput = (
             ],
           },
         ] as Descendant[],
-      } as RichTextBlockInput,
+      } as BreakBlockInput,
     } as BlockContentInput,
 
     // a credits teaser block
@@ -1310,7 +1302,7 @@ async function seedPages(
               text: 'Wir gehen hin wo andere wegschauen',
               linkTarget: null,
               linkText: 'Mehr über uns',
-              linkURL: '/authors',
+              linkURL: '/author',
               richText: [
                 {
                   type: 'unordered-list',
@@ -1465,19 +1457,17 @@ async function seedPages(
             } as RichTextBlockInput,
           } as BlockContentInput,
 
-          // reflekt ist gemeinnützig - collapsible rich text block
+          // reflekt ist gemeinnützig - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
+              text: 'REFLEKT ist gemeinnützig',
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT ist gemeinnützig',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1490,22 +1480,20 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
 
-          // reflekt ist preisgekrönt - collapsible rich text block
+          // reflekt ist preisgekrönt - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              text: 'REFLEKT ist preisgekrönt',
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT ist preisgekrönt',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1518,22 +1506,20 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
 
-          // reflekt hat reichweite - collapsible rich text block
+          // reflekt hat reichweite - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              text: 'REFLEKT hat Reichweite',
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT hat Reichweite',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1546,22 +1532,20 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
 
-          // reflekt hat impact - collapsible rich text block
+          // reflekt hat impact - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              text: 'REFLEKT hat Impact',
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT hat Impact',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1574,22 +1558,20 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
 
-          // reflekt funktioniert - dank dir - collapsible rich text block
+          // reflekt funktioniert - dank dir - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              text: 'REFLEKT funktioniert – dank dir',
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT funktioniert - dank dir',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1602,22 +1584,20 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
 
-          // reflekt ist unabhängig - collapsible rich text block
+          // reflekt ist unabhängig - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              text: 'REFLEKT ist unabhängig',
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT ist unabhängig',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1630,22 +1610,20 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
 
-          // reflekt ist investigativ - collapsible rich text block
+          // reflekt ist investigativ - collapsible content block
           {
-            richText: {
-              blockStyle: getBlockStyle(blockStyles, 'CollapsibleRichText'),
+            linkPageBreak: {
+              hideButton: false,
+              imageID: null,
+              linkTarget: null,
+              linkText: null,
+              linkURL: null,
+              text: 'REFLEKT ist investigativ',
+              blockStyle: getBlockStyle(blockStyles, 'CollapsibleContent'),
               richText: [
-                {
-                  type: 'heading-one',
-                  children: [
-                    {
-                      text: 'REFLEKT ist investigativ',
-                    },
-                  ],
-                },
                 {
                   type: 'paragraph',
                   children: [
@@ -1658,7 +1636,7 @@ async function seedPages(
                   ],
                 },
               ] as Descendant[],
-            } as RichTextBlockInput,
+            } as BreakBlockInput,
           } as BlockContentInput,
         ] as BlockContentInput[],
       },
@@ -1805,18 +1783,18 @@ async function seedBlockStyles(createBlockStyle: any): Promise<BlockStyle[]> {
     },
 
     {
-      name: 'CollapsibleRichText',
-      blocks: ['RichText'],
+      name: 'CollapsibleContent',
+      blocks: ['LinkPageBreak'],
     },
 
     {
       name: 'CollapsibleDownloads',
-      blocks: ['RichText'],
+      blocks: ['LinkPageBreak'],
     },
 
     {
       name: 'TableOfContents',
-      blocks: ['RichText'],
+      blocks: ['LinkPageBreak'],
     },
 
     {

@@ -2,24 +2,19 @@ import styled from '@emotion/styled';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import { hasBlockStyle, isBreakBlock } from '@wepublish/block-content/website';
+import { BlockContent } from '@wepublish/website/api';
 import {
-  hasBlockStyle,
-  isRichTextBlock,
-} from '@wepublish/block-content/website';
-import {
-  BlockContent,
-  RichTextBlock as RichTextBlockType,
-} from '@wepublish/website/api';
-import {
-  BuilderRichTextBlockProps,
+  BuilderBreakBlockProps,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
 import { allPass } from 'ramda';
 import React from 'react';
 import { MdArrowDownward } from 'react-icons/md';
 
-import { ReflektBlockType } from './reflekt-block-styles';
-export const ReflektCollapsibleRichTextWrapper = styled(Accordion)`
+import { ReflektBlockType } from '../block-styles/reflekt-block-styles';
+
+export const ReflektCollapsibleContentWrapper = styled(Accordion)`
   overflow-anchor: auto;
   margin: 0;
 
@@ -39,40 +34,36 @@ export const ExpandIcon = styled(MdArrowDownward)`
   }
 `;
 
-export const isCollapsibleRichText = (
+export const isCollapsibleContent = (
   block: Pick<BlockContent, '__typename'>
-): block is RichTextBlockType =>
-  allPass([
-    hasBlockStyle(ReflektBlockType.CollapsibleRichText),
-    isRichTextBlock,
-  ])(block);
+): block is BuilderBreakBlockProps =>
+  allPass([hasBlockStyle(ReflektBlockType.CollapsibleContent), isBreakBlock])(
+    block
+  );
 
-export const ReflektCollapsibleRichText = ({
+export const ReflektCollapsibleContent = ({
   className,
+  text,
   richText,
-}: BuilderRichTextBlockProps) => {
+}: BuilderBreakBlockProps) => {
   const {
     blocks: { RichText },
   } = useWebsiteBuilder();
-  const thisId = `AC-${React.useId()}`;
+  const thisId = `AC-${React.useId().replace(/:/g, '')}`;
 
   return (
-    <ReflektCollapsibleRichTextWrapper className={className}>
+    <ReflektCollapsibleContentWrapper className={className}>
       <AccordionSummary
         expandIcon={<ExpandIcon />}
         aria-controls={`${thisId}-panel-content`}
         id={`${thisId}-panel-header`}
       >
-        {richText &&
-          richText.length > 0 &&
-          (richText[0] as any).children[0].text}
+        {text}
       </AccordionSummary>
 
       <AccordionDetails id={`${thisId}-panel-content`}>
-        {richText && richText.length > 1 && (
-          <RichText richText={[...richText].splice(1, richText.length - 1)} />
-        )}
+        <RichText richText={richText} />
       </AccordionDetails>
-    </ReflektCollapsibleRichTextWrapper>
+    </ReflektCollapsibleContentWrapper>
   );
 };

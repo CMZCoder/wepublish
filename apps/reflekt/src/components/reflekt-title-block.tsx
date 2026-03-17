@@ -22,39 +22,17 @@ export const TitleBlockWrapper = styled('div')`
   grid-auto-rows: min-content;
 `;
 export const TitleBlockTitle = styled('h1')``;
-
-export const TitleBlockPreTitleWrapper = styled('div')`
-  padding: ${({ theme }) => `${theme.spacing(0.5)} ${theme.spacing(2)}`};
-  background-color: ${({ theme }) => theme.palette.accent.main};
-  color: ${({ theme }) => theme.palette.accent.contrastText};
-  width: fit-content;
-  margin-bottom: -${({ theme }) => theme.spacing(1.5)};
-`;
 export const TitleBlockLead = styled('p')``;
 
 type TitleBlockComponents = {
   PreTitle?: ComponentType<Pick<BuilderTitleBlockProps, 'preTitle'>>;
 };
 
-export const TitleBlockPreTitle: Exclude<
-  TitleBlockComponents['PreTitle'],
-  undefined
-> = ({ preTitle }) =>
-  preTitle && (
-    <Typography
-      variant="blockTitlePreTitle"
-      component={TitleBlockPreTitleWrapper}
-    >
-      {preTitle}
-    </Typography>
-  );
-
 export const ReflektTitleBlock = ({
   title,
   preTitle,
   lead,
   className,
-  PreTitle = TitleBlockPreTitle,
   siblings,
 }: BuilderTitleBlockProps &
   TitleBlockComponents & {
@@ -72,8 +50,6 @@ export const ReflektTitleBlock = ({
 
   return (
     <TitleBlockWrapper className={className}>
-      {!hasHeroSibling && <PreTitle preTitle={preTitle} />}
-
       {!hasHeroSibling && <H2 component={TitleBlockTitle}>{title}</H2>}
 
       {lead && (

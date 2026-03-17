@@ -3,23 +3,26 @@ import { Typography, useMediaQuery, useTheme } from '@mui/material';
 import {
   alignmentForTeaserBlock,
   isFilledTeaser,
-  TeaserSlider,
   TeaserSlotsBlockTeasers as TeaserSlotsBlockTeasersDefault,
   TeaserSlotsBlockWrapper as TeaserSlotsBlockWrapperDefault,
 } from '@wepublish/block-content/website';
 import {
-  SliderBallContainer,
-  SliderWrapper,
+  SliderInnerContainer,
+  SliderTitle,
+  SlidesContainer as SlidesContainerDefault,
   useSlidesPadding,
 } from '@wepublish/block-content/website';
 import {
+  BuilderBlockStyleProps,
   BuilderSlidesPerView,
   BuilderTeaserListBlockProps,
   BuilderTeaserSlotsBlockProps,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
 import { Maybe } from 'graphql/jsutils/Maybe';
+import { useKeenSlider } from 'keen-slider/react';
 import { allPass } from 'ramda';
+import { useEffect, useState } from 'react';
 
 import { ReflektBlockType } from '../block-styles/reflekt-block-styles';
 import { TeaserWrapper } from '../teasers/reflekt-teaser';
@@ -32,25 +35,7 @@ export const isTeaserSlotsTopic = allPass([
     );
   },
 ]);
-export const TeaserSlotsTopicWrapper = styled(TeaserSlotsBlockWrapperDefault)`
-  ${SliderWrapper} ${TeaserWrapper} {
-    width: calc(100vw - 50px);
-    //padding-right: 8px;
-    //padding-left: 8px;
-  }
-
-  .keen-slider__slide {
-    //min-width: 100% !important;
-    //max-width: 100% !important;
-    width: calc(100vw - 64px) !important;
-    //min-width: calc(100vw - 64px) !important;
-    //max-width: calc(100vw - 64px) !important;
-  }
-
-  ${SliderBallContainer} {
-    display: none;
-  }
-`;
+export const TeaserSlotsTopicWrapper = styled(TeaserSlotsBlockWrapperDefault)``;
 
 export const TeaserSlotsTopicTeasers = styled(TeaserSlotsBlockTeasersDefault)``;
 
@@ -108,43 +93,100 @@ export const useSlidesPerView = ({
   return xs;
 };
 
+export const SlidesContainer = styled(SlidesContainerDefault)`
+  padding-left: 16px;
+
+  ${TeaserWrapper} {
+    //width: calc(100vw - 50px);
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .keen-slider__slide {
+    //min-width: 100% !important;
+    //max-width: 100% !important;
+    //width: calc(100vw - 64px) !important;
+    //min-width: calc(100vw - 64px) !important;
+    //max-width: calc(100vw - 64px) !important;
+  }
+`;
+
 export const TeaserSlotsTopic = ({
   blockStyle,
   className,
   teasers,
-  title,
-}: Pick<
-  BuilderTeaserListBlockProps,
-  'title' | 'teasers' | 'blockStyle' | 'className'
->) => {
+  slidesPerViewConfig = {},
+  ...props
+}: BuilderBlockStyleProps['TeaserSlider']) => {
   const {
     blocks: { Teaser },
   } = useWebsiteBuilder();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loaded, setLoaded] = useState(false);
 
   const filledTeasers = teasers.filter(isFilledTeaser);
-  const numColumns = 1;
 
-  const slidesPerView = useSlidesPerView();
+  const slidesPerView = useSlidesPerView(slidesPerViewConfig);
   const slidePadding = useSlidesPadding();
+  const ksOptions = {
+    mode: 'free-snap',
+    loop: true,
+    slides: {
+      origin: 'center',
+      perView: slidesPerView,
+      spacing: 0,
+    },
+    slideChanged(slider) {
+      setCurrentSlide(slider.track.details.rel);
+    },
+    created() {
+      setLoaded(true);
+    },
+  };
+  const [ref, sliderRef] = useKeenSlider(ksOptions);
+
+  useEffect(() => {
+    sliderRef.current?.update(ksOptions);
+  }, [filledTeasers]);
 
   return (
     !!filledTeasers.length && (
       <TeaserSlotsTopicWrapper className={className}>
-        <Typography variant={'teaserSlotsTitle'}>{title}</Typography>
-        <TeaserSlider
-          teasers={filledTeasers.filter(
-            teaser => teaser?.__typename === 'ArticleTeaser'
-          )}
-          blockStyle={blockStyle}
-          numColumns={numColumns}
-          slidesPerViewConfig={{
-            xs: 1.2,
-            sm: 1.2,
-            md: 3,
-            lg: 3,
-            xl: 3,
-          }}
-        />
+        {(props as BuilderTeaserListBlockProps).title && (
+          <SliderTitle>
+            <Typography variant={'teaserSlotsTitle'}>
+              {(props as BuilderTeaserListBlockProps).title}
+            </Typography>
+          </SliderTitle>
+        )}
+
+        <SliderInnerContainer>
+          <SlidesContainer
+            ref={ref}
+            className="keen-slider"
+          >
+            {filledTeasers
+              .filter(teaser => teaser?.__typename === 'ArticleTeaser')
+              .map((teaser: any, index: number) => (
+                <div
+                  key={index}
+                  className="keen-slider__slide"
+                >
+                  <Teaser
+                    key={index}
+                    index={index}
+                    teaser={teaser}
+                    alignment={alignmentForTeaserBlock(index, 3)}
+                    blockStyle={blockStyleByIndex(
+                      index,
+                      filledTeasers.length,
+                      blockStyle
+                    )}
+                  />
+                </div>
+              ))}
+          </SlidesContainer>
+        </SliderInnerContainer>
         <Teaser
           key={filledTeasers.length - 1}
           index={filledTeasers.length - 1}

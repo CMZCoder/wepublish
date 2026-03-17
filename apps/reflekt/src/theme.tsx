@@ -427,6 +427,7 @@ const theme = createTheme(WePTheme, {
           // Downloads - CollapsibleRichText
           ulDownloads: 'ul',
           liDownloads: 'li',
+          teaserSlotsTitle: 'h2',
         },
       },
     },

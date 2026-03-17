@@ -32,10 +32,10 @@ import {
   FlexBlockHeroWrapper,
   isFlexBlockHero,
 } from './block-layouts/flex-block-hero';
-import { ReflektCollapsibleDownloadsWrapper } from './block-styles/reflekt-collapsible-downloads';
-import { ReflektCollapsibleRichTextWrapper } from './block-styles/reflekt-collapsible-richtext';
 import { ReflektImageBlockFullsize } from './block-styles/reflekt-image-block-fullsize';
-import { ReflektTocRichTextWrapper } from './block-styles/reflekt-toc-richtext';
+import { ReflektCollapsibleContentWrapper } from './break-blocks/reflekt-collapsible-content';
+import { ReflektCollapsibleDownloadsWrapper } from './break-blocks/reflekt-collapsible-downloads';
+import { ReflektTocWrapper } from './break-blocks/reflekt-toc';
 import { ReflektQuoteBlock } from './reflekt-quote-block';
 import { TeaserSlotsCreditsWrapper } from './teaser-layouts/teaser-slots-credits';
 
@@ -104,9 +104,9 @@ export const ArticleWrapper = styled(ContentWrapper)<{
         ${SliderWrapper},
           ${EventBlockWrapper},
           ${BreakBlockWrapper},
-          ${ReflektCollapsibleRichTextWrapper},
+          ${ReflektCollapsibleContentWrapper},
           ${ReflektCollapsibleDownloadsWrapper},
-          ${ReflektTocRichTextWrapper},
+          ${ReflektTocWrapper},
           ${ReflektQuoteBlock},
           ${TeaserSlotsCreditsWrapper}
       ) {

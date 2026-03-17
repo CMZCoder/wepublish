@@ -1,15 +1,13 @@
 import styled from '@emotion/styled';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
-import {
-  hasBlockStyle,
-  isRichTextBlock,
-} from '@wepublish/block-content/website';
+import { hasBlockStyle, isBreakBlock } from '@wepublish/block-content/website';
 import {
   BlockContent,
-  RichTextBlock as RichTextBlockType,
+  BreakBlock as BreakBlockType,
 } from '@wepublish/website/api';
 import {
+  BuilderBreakBlockProps,
   BuilderRichTextBlockProps,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
@@ -20,28 +18,28 @@ type ReflektRichTextBlockType = ComponentType<
   BuilderRichTextBlockProps & { variant?: string }
 >;
 
-import { ReflektBlockType } from './reflekt-block-styles';
+import { ReflektBlockType } from '../block-styles/reflekt-block-styles';
 import {
   ExpandIcon,
-  ReflektCollapsibleRichTextWrapper,
-} from './reflekt-collapsible-richtext';
+  ReflektCollapsibleContentWrapper,
+} from './reflekt-collapsible-content';
 
 export const ReflektCollapsibleDownloadsWrapper = styled(
-  ReflektCollapsibleRichTextWrapper
+  ReflektCollapsibleContentWrapper
 )``;
 
 export const isCollapsibleDownloads = (
   block: Pick<BlockContent, '__typename'>
-): block is RichTextBlockType =>
-  allPass([
-    hasBlockStyle(ReflektBlockType.CollapsibleDownloads),
-    isRichTextBlock,
-  ])(block);
+): block is BreakBlockType =>
+  allPass([hasBlockStyle(ReflektBlockType.CollapsibleDownloads), isBreakBlock])(
+    block
+  );
 
 export const ReflektCollapsibleDownloads = ({
   className,
+  text,
   richText,
-}: BuilderRichTextBlockProps) => {
+}: BuilderBreakBlockProps) => {
   const {
     blocks: { RichText },
   } = useWebsiteBuilder();
@@ -56,15 +54,13 @@ export const ReflektCollapsibleDownloads = ({
         aria-controls={`${thisId}-panel-content`}
         id={`${thisId}-panel-header`}
       >
-        {richText &&
-          richText.length > 0 &&
-          (richText[0] as any).children[0].text}
+        {text}
       </AccordionSummary>
 
       <AccordionDetails id={`${thisId}-panel-content`}>
-        {richText && richText.length > 1 && (
+        {richText && (
           <ReflektRichText
-            richText={[...richText].splice(1, richText.length - 1)}
+            richText={richText}
             variant="downloads"
           />
         )}

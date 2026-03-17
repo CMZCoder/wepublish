@@ -4,7 +4,7 @@ export enum ReflektBlockType {
   TeaserMoreAbout = 'TeaserMoreAbout',
   TeaserCredits = 'TeaserCredits',
   TeaserNews = 'TeaserNews',
-  CollapsibleRichText = 'CollapsibleRichText',
+  CollapsibleContent = 'CollapsibleContent',
   CollapsibleDownloads = 'CollapsibleDownloads',
   TableOfContents = 'TableOfContents',
   ImageFullsize = 'ImageFullsize',
