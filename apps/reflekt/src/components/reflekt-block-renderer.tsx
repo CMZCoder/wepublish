@@ -7,6 +7,7 @@ import { BlockContent } from '@wepublish/website/api';
 import {
   BuilderBlockRendererProps,
   BuilderBlocksProps,
+  BuilderTeaserSlotsBlockProps,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
 import { allPass, cond } from 'ramda';
@@ -145,7 +146,11 @@ export const ReflektBlockRenderer = (
           `,
         ],
         [
-          allPass([isTeaserSlotsTopic, () => isMobile]),
+          allPass([
+            (block: BlockContent) =>
+              isTeaserSlotsTopic(block as BuilderTeaserSlotsBlockProps),
+            () => isMobile,
+          ]),
           () => css`
             grid-template-columns: auto !important;
             padding: 0 !important;

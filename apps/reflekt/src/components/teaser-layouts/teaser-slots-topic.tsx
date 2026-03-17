@@ -40,8 +40,6 @@ export const TeaserSlotsTopicWrapper = styled(TeaserSlotsBlockWrapperDefault)`
   }
 
   .keen-slider__slide {
-    //min-width: 100% !important;
-    //max-width: 100% !important;
     width: calc(100vw - 64px) !important;
     //min-width: calc(100vw - 64px) !important;
     //max-width: calc(100vw - 64px) !important;
@@ -52,8 +50,6 @@ export const TeaserSlotsTopicWrapper = styled(TeaserSlotsBlockWrapperDefault)`
   }
 `;
 
-export const TeaserSlotsTopicTeasers = styled(TeaserSlotsBlockTeasersDefault)``;
-
 export const blockStyleByIndex = (
   index: number,
   count: number,
@@ -62,50 +58,6 @@ export const blockStyleByIndex = (
   return index < count - 1 ?
       (blockStyle as ReflektBlockType)
     : ReflektBlockType.TeaserMoreAbout;
-};
-
-export const useSlidesPerView = ({
-  xs = 1.1,
-  sm = 2,
-  md = 2.2,
-  lg = 3,
-  xl = 3,
-}: BuilderSlidesPerView = {}) => {
-  const theme = useTheme();
-
-  const smQuery = useMediaQuery(theme.breakpoints.up('sm'), {
-    ssrMatchMedia: () => ({ matches: false }),
-  });
-
-  const mdQuery = useMediaQuery(theme.breakpoints.up('md'), {
-    ssrMatchMedia: () => ({ matches: false }),
-  });
-
-  const lgQuery = useMediaQuery(theme.breakpoints.up('lg'), {
-    ssrMatchMedia: () => ({ matches: false }),
-  });
-
-  const xlQuery = useMediaQuery(theme.breakpoints.up('xl'), {
-    ssrMatchMedia: () => ({ matches: false }),
-  });
-
-  if (xlQuery) {
-    return xl;
-  }
-
-  if (lgQuery) {
-    return lg;
-  }
-
-  if (mdQuery) {
-    return md;
-  }
-
-  if (smQuery) {
-    return sm;
-  }
-
-  return xs;
 };
 
 export const TeaserSlotsTopic = ({
@@ -123,9 +75,6 @@ export const TeaserSlotsTopic = ({
 
   const filledTeasers = teasers.filter(isFilledTeaser);
   const numColumns = 1;
-
-  const slidesPerView = useSlidesPerView();
-  const slidePadding = useSlidesPadding();
 
   return (
     !!filledTeasers.length && (
