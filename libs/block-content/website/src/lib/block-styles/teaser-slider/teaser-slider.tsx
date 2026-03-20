@@ -4,7 +4,7 @@ import { useMediaQuery, useTheme } from '@mui/material';
 import styled from '@emotion/styled';
 import { useKeenSlider } from 'keen-slider/react';
 import { allPass, anyPass } from 'ramda';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   BlockContent,
