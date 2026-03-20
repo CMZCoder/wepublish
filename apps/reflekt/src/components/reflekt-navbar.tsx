@@ -79,9 +79,13 @@ const cssVariables = (state: NavbarState[], isHomePage: boolean) => css`
 export const AppBar = styled(MuiAppBar, {
   shouldForwardProp: propName => propName !== 'isMenuOpen',
 })<{ isMenuOpen?: boolean }>`
-  background-color: var(--navbar-bg-color-hero-off-screen, white);
   position: relative;
   overflow-y: visible;
+  background-color: transparent;
+
+  ${theme.breakpoints.up('md')} {
+    background-color: var(--navbar-bg-color-hero-off-screen, white);
+  }
 
   ${({ isMenuOpen }) =>
     isMenuOpen &&
@@ -99,7 +103,11 @@ export const NavbarWrapper = styled('nav')`
   height: auto;
   pointer-events: none;
   margin-bottom: calc(${theme.spacing(-3)} + 1px);
-  background-color: var(--navbar-bg-color-hero-off-screen, white);
+  background-color: transparent;
+
+  ${theme.breakpoints.up('md')} {
+    background-color: var(--navbar-bg-color-hero-off-screen, white);
+  }
 
   > * {
     pointer-events: all;
@@ -337,6 +345,7 @@ export const ReflektLogo = styled('img', {
   transition: width 300ms ease-out;
   transform: translate3d(0, 0, 0);
   position: absolute;
+  display: none;
 
   width: 15.5rem;
   height: auto;
@@ -344,6 +353,10 @@ export const ReflektLogo = styled('img', {
   left: calc(50vw - 15.5rem);
 
   mix-blend-mode: difference;
+
+  ${theme.breakpoints.up('md')} {
+    display: block;
+  }
 `;
 
 const OpenInvoicesAlert = styled('div')`
@@ -521,8 +534,12 @@ export const NavbarInnerWrapper = styled(Toolbar, {
   ${({ isMenuOpen }) =>
     isMenuOpen &&
     css`
-      background-color: var(--navbar-bg-color-hero-off-screen, white);
       pointer-events: none;
+      background-color: transparent;
+
+      ${theme.breakpoints.up('md')} {
+        background-color: var(--navbar-bg-color-hero-off-screen, white);
+      }
 
       ${NavbarHomeLink} {
         visibility: hidden;

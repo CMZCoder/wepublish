@@ -1,19 +1,16 @@
 import styled from '@emotion/styled';
-import { Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Theme, Typography, useMediaQuery } from '@mui/material';
 import {
   alignmentForTeaserBlock,
   isFilledTeaser,
   TeaserSlider,
-  TeaserSlotsBlockTeasers as TeaserSlotsBlockTeasersDefault,
   TeaserSlotsBlockWrapper as TeaserSlotsBlockWrapperDefault,
 } from '@wepublish/block-content/website';
 import {
   SliderBallContainer,
   SliderWrapper,
-  useSlidesPadding,
 } from '@wepublish/block-content/website';
 import {
-  BuilderSlidesPerView,
   BuilderTeaserListBlockProps,
   BuilderTeaserSlotsBlockProps,
   useWebsiteBuilder,
@@ -34,15 +31,17 @@ export const isTeaserSlotsTopic = allPass([
 ]);
 export const TeaserSlotsTopicWrapper = styled(TeaserSlotsBlockWrapperDefault)`
   ${SliderWrapper} ${TeaserWrapper} {
-    width: calc(100vw - 50px);
-    //padding-right: 8px;
-    //padding-left: 8px;
+    ${({ theme }) => theme.breakpoints.down('md')} {
+      width: 100%;
+    }
   }
 
   .keen-slider__slide {
-    width: calc(100vw - 64px) !important;
-    //min-width: calc(100vw - 64px) !important;
-    //max-width: calc(100vw - 64px) !important;
+    ${({ theme }) => theme.breakpoints.down('md')} {
+      width: calc(100vw - 64px) !important;
+      min-width: calc(100vw - 64px) !important;
+      max-width: calc(100vw - 64px) !important;
+    }
   }
 
   ${SliderBallContainer} {
@@ -72,6 +71,7 @@ export const TeaserSlotsTopic = ({
   const {
     blocks: { Teaser },
   } = useWebsiteBuilder();
+  const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'));
 
   const filledTeasers = teasers.filter(isFilledTeaser);
   const numColumns = 1;
@@ -87,12 +87,13 @@ export const TeaserSlotsTopic = ({
           blockStyle={blockStyle}
           numColumns={numColumns}
           slidesPerViewConfig={{
-            xs: 1.2,
-            sm: 1.2,
+            xs: 'auto',
+            sm: 'auto',
             md: 3,
             lg: 3,
             xl: 3,
           }}
+          dragDisabled={isDesktop}
         />
         <Teaser
           key={filledTeasers.length - 1}

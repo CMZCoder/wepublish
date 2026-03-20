@@ -45,7 +45,10 @@ export default function Mitmachen(props: ComponentProps<typeof SubscribePage>) {
       <GlobalStyles
         styles={css`
           :root {
-            --navbar-bg-color-hero-off-screen: ${theme.palette.secondary.main};
+            ${theme.breakpoints.up('md')} {
+              --navbar-bg-color-hero-off-screen: ${theme.palette.secondary
+                .main};
+            }
           }
           body {
             background-color: ${theme.palette.secondary.main};
