@@ -148,14 +148,14 @@ type Author implements HasImage & HasOptionalPeerLc {
   image: Image
   imageID: String
   jobTitle: String
-  links: [AuthorLink!]
+  links: [AuthorLink!]!
   modifiedAt: DateTime!
   name: String!
   peer: Peer
   peerId: String
   slug: Slug!
   tags: [Tag!]!
-  url: String!
+  url: String
 }
 
 type AuthorCreatedAction implements BaseAction & HasAuthor {

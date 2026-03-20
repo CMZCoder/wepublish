@@ -182,14 +182,14 @@ export type Author = HasImage & HasOptionalPeerLc & {
   image?: Maybe<Image>;
   imageID?: Maybe<Scalars['String']>;
   jobTitle?: Maybe<Scalars['String']>;
-  links?: Maybe<Array<AuthorLink>>;
+  links: Array<AuthorLink>;
   modifiedAt: Scalars['DateTime'];
   name: Scalars['String'];
   peer?: Maybe<Peer>;
   peerId?: Maybe<Scalars['String']>;
   slug: Scalars['Slug'];
   tags: Array<Tag>;
-  url: Scalars['String'];
+  url?: Maybe<Scalars['String']>;
 };
 
 export type AuthorCreatedAction = BaseAction & HasAuthor & {
