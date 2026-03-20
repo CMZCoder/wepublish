@@ -90,6 +90,10 @@ export const ArticleWrapper = styled(ContentWrapper)<{
   padding-bottom: ${({ theme }) => theme.spacing(14)};
 
   ${({ theme }) => theme.breakpoints.up('md')} {
+    grid-template-columns:
+      max(calc(100vw - var(--breakpoint-width)) / 2, 0px)
+      repeat(12, 1fr)
+      max(calc(100vw - var(--breakpoint-width)) / 2, 0px) !important;
     justify-content: center;
 
     & > *,
@@ -135,11 +139,6 @@ export const ArticleWrapper = styled(ContentWrapper)<{
       margin-right: 0;
     }
   }
-
-  grid-template-columns:
-    max(calc(100vw - var(--breakpoint-width)) / 2, 0px)
-    repeat(12, 1fr)
-    max(calc(100vw - var(--breakpoint-width)) / 2, 0px) !important;
 
   ${({
     hideContent,
