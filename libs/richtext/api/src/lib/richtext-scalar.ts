@@ -3,6 +3,7 @@ import { is } from 'ramda';
 
 import { Node } from 'prosemirror-model';
 import { Extensions, getSchema, JSONContent } from '@tiptap/core';
+import { editorConfig } from '@wepublish/richtext/editor';
 
 const validateSchema = (doc: JSONContent, extensions: Extensions): boolean => {
   try {
@@ -42,11 +43,11 @@ export function parseRichTextNode(value: unknown, path: string[] = []) {
     throw createRichTextError(`Expected object, found ${value}.`, path);
   }
 
-  // const valid = validateSchema(value, editorConfig.extensions ?? []);
+  const valid = validateSchema(value, editorConfig.extensions ?? []);
 
-  // if (!valid) {
-  //   throw new Error();
-  // }
+  if (!valid) {
+    throw new Error();
+  }
 
   return value;
 }

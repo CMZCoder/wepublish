@@ -5,6 +5,20 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/richtext/editor",
+        "tsConfig": "libs/richtext/editor/tsconfig.lib.json",
+        "packageJson": "libs/richtext/editor/package.json",
+        "main": "libs/richtext/editor/src/index.ts",
+        "assets": [],
+        "rootDir": ".",
+        "buildableProjectDepsInPackageJsonType": "dependencies",
+        "updateBuildableProjectDepsInPackageJson": true
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
