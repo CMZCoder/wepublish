@@ -52,6 +52,11 @@ const FAKE_USER: User = {
   userImageID: null,
   birthday: new Date(),
   note: null,
+  pendingEmail: null,
+  pendingEmailAt: null,
+  totpSecret: null,
+  totpEnabled: false,
+  totpExempt: false,
 };
 
 describe('SystemMailResolver', () => {

@@ -46,6 +46,8 @@ const mockUser: User = {
   birthday: new Date(),
   email: 'test@example.com',
   emailVerifiedAt: new Date('2023-01-01T02:00:00.000Z'),
+  pendingEmail: null,
+  pendingEmailAt: null,
   name: 'Test User',
   firstName: 'Test',
   flair: null,
@@ -55,6 +57,9 @@ const mockUser: User = {
   roleIDs: ['role1', 'role2'],
   userImageID: 'image-1',
   note: null,
+  totpSecret: null,
+  totpEnabled: false,
+  totpExempt: false,
 };
 
 describe('bexio-utils', () => {

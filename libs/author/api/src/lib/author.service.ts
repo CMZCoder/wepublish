@@ -4,13 +4,14 @@ import {
   Author,
   AuthorFilter,
   AuthorSort,
+  AuthorListArgs,
   CreateAuthorInput,
   UpdateAuthorInput,
 } from './author.model';
 import { AuthorDataloaderService } from './author-dataloader.service';
 import {
+  getMaxTake,
   graphQLSortOrderToPrisma,
-  PageInfo,
   PrimeDataLoader,
   SortOrder,
 } from '@wepublish/utils/api';
@@ -29,9 +30,6 @@ export class AuthorService {
       where: {
         id,
       },
-      include: {
-        links: true,
-      },
     });
   }
 
@@ -41,21 +39,18 @@ export class AuthorService {
       where: {
         slug,
       },
-      include: {
-        links: true,
-      },
     });
   }
 
   @PrimeDataLoader(AuthorDataloaderService)
-  async getAuthors(
-    filter?: Partial<AuthorFilter>,
-    sort: AuthorSort = AuthorSort.ModifiedAt,
-    order: SortOrder = SortOrder.Descending,
-    cursorId: string | null = null,
+  async getAuthors({
+    filter,
+    sort = AuthorSort.ModifiedAt,
+    order = SortOrder.Descending,
+    cursorId,
     skip = 0,
-    take = 10
-  ): Promise<{ nodes: Author[]; totalCount: number; pageInfo: PageInfo }> {
+    take = 10,
+  }: AuthorListArgs) {
     const where = createAuthorFilter(filter);
     const prismaOrder = graphQLSortOrderToPrisma(order);
 
@@ -66,18 +61,15 @@ export class AuthorService {
       this.prisma.author.count({ where }),
       this.prisma.author.findMany({
         where,
-        take: take + 1, // Take one more to check for next page
+        take: getMaxTake(take) + 1, // Take one more to check for next page
         skip,
         cursor: cursorId ? { id: cursorId } : undefined,
         orderBy,
-        include: {
-          links: true,
-        },
       }),
     ]);
 
     // Slice to the requested amount
-    const nodes = authors.slice(0, take) as unknown as Author[];
+    const nodes = authors.slice(0, getMaxTake(take)) as unknown as Author[];
     const firstAuthor = nodes[0];
     const lastAuthor = nodes[nodes.length - 1];
 

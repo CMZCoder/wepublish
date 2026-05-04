@@ -1,20 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { PrismaClient, UserEvent } from '@prisma/client';
-import { SessionWithToken } from './session.model';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { PrismaClient, User, UserEvent } from '@prisma/client';
 import { InvalidCredentialsError, NotActiveError } from './session.errors';
 import nanoid from 'nanoid/generate';
 import { UserAuthenticationService } from './user-authentication.service';
 import { JwtAuthenticationService } from './jwt-authentication.service';
-import { UserSession } from '@wepublish/authentication/api';
-import {
-  FIFTEEN_MINUTES_IN_MILLISECONDS,
-  USER_PROPERTY_LAST_LOGIN_LINK_SEND,
-} from '@wepublish/api';
+import { unselectPassword, UserSession } from '@wepublish/authentication/api';
 import { MailContext, mailLogType } from '@wepublish/mail/api';
 import { SettingName, SettingsService } from '@wepublish/settings/api';
 import { Validator } from './validator';
-import { SensitiveDataUser } from '@wepublish/user/api';
-import { logger } from '@wepublish/utils/api';
+import { UserService } from '@wepublish/user/api';
+import {
+  FIFTEEN_MINUTES_IN_MILLISECONDS,
+  logger,
+  USER_PROPERTY_LAST_LOGIN_LINK_SEND,
+} from '@wepublish/utils/api';
+import { JwtService } from './jwt.service';
+import { TotpService } from './totp.service';
 
 const IDAlphabet =
   '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -27,33 +28,100 @@ export class SessionService {
     private prisma: PrismaClient,
     @Inject(SESSION_TTL_TOKEN) private sessionTTL: number,
     private userAuthenticationService: UserAuthenticationService,
+    private userService: UserService,
     private jwtAuthenticationService: JwtAuthenticationService,
+    private jwtService: JwtService,
     private settingsService: SettingsService,
-    private mailContext: MailContext
+    private mailContext: MailContext,
+    private totpService: TotpService
   ) {}
+
+  /**
+   * Checks if a given email requires TOTP during login.
+   * Returns true if the user has TOTP enabled or if the user doesn't exist
+   * (to prevent user enumeration - unknown emails look the same as TOTP users).
+   * Returns false only for existing users without TOTP configured.
+   */
+  async checkLoginOtp(email: string): Promise<boolean> {
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email.toLowerCase(), mode: 'insensitive' } },
+      select: { totpEnabled: true },
+    });
+
+    if (!user) {
+      return true;
+    }
+
+    return user.totpEnabled;
+  }
 
   async createSessionWithEmailAndPassword(
     email: string,
-    password: string
-  ): Promise<SessionWithToken> {
+    password: string,
+    totpToken?: string
+  ) {
     const user =
       await this.userAuthenticationService.authenticateUserWithEmailAndPassword(
         email,
         password
       );
 
-    if (!user) throw new InvalidCredentialsError();
-    if (!user.active) throw new NotActiveError();
+    if (!user) {
+      throw new InvalidCredentialsError();
+    }
+
+    if (!user.active) {
+      throw new NotActiveError();
+    }
+
+    if (user.totpEnabled) {
+      // User has TOTP configured - require valid code to get a session.
+      // No exceptions: password login without TOTP = no session.
+      if (!totpToken) {
+        throw new InvalidCredentialsError();
+      }
+
+      await this.totpService.verifyUserTotp(user.id, totpToken);
+    }
 
     return this.createUserSession(user);
   }
 
-  async createSessionWithJWT(jwt: string): Promise<SessionWithToken> {
-    const user =
-      await this.jwtAuthenticationService.authenticateUserWithJWT(jwt);
+  async createSessionWithJWT(jwt: string, totpToken?: string) {
+    // Try preview audience first (1-min JWT from editor, skips TOTP)
+    let isPreview = false;
+    let user = null;
 
-    if (!user) throw new InvalidCredentialsError();
-    if (!user.active) throw new NotActiveError();
+    try {
+      const userId = await this.jwtService.verifyJWT(jwt, 'preview');
+      if (userId) {
+        user = await this.prisma.user.findUnique({ where: { id: userId } });
+        isPreview = true;
+      }
+    } catch {
+      // Not a preview JWT - try normal website audience
+    }
+
+    if (!user) {
+      user = await this.jwtAuthenticationService.authenticateUserWithJWT(jwt);
+    }
+
+    if (!user) {
+      throw new InvalidCredentialsError();
+    }
+
+    if (!user.active) {
+      throw new NotActiveError();
+    }
+
+    // Preview JWTs skip TOTP - the editor user already passed 2FA
+    if (!isPreview && user.totpEnabled) {
+      if (!totpToken) {
+        throw new BadRequestException('TOTP_REQUIRED');
+      }
+
+      await this.totpService.verifyUserTotp(user.id, totpToken);
+    }
 
     return this.createUserSession(user);
   }
@@ -62,6 +130,7 @@ export class SessionService {
     if (!session) {
       return false;
     }
+
     return !!(await this.prisma.session.delete({
       where: {
         token: session.token,
@@ -69,37 +138,47 @@ export class SessionService {
     }));
   }
 
-  async createUserSession(user: SensitiveDataUser): Promise<SessionWithToken> {
+  async createUserSession(user: User) {
     const token = nanoid(IDAlphabet, 64);
 
     const expiresAt = new Date(Date.now() + this.sessionTTL);
 
-    const { createdAt } = await this.prisma.session.create({
-      data: {
-        token,
-        expiresAt,
-        user: {
-          connect: {
-            id: user.id,
+    const [{ createdAt }] = await Promise.all([
+      this.prisma.session.create({
+        data: {
+          token,
+          expiresAt,
+          user: {
+            connect: {
+              id: user.id,
+            },
           },
         },
-      },
-    });
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() },
+      }),
+    ]);
 
     return {
       user,
       token,
       createdAt,
       expiresAt,
+      totpEnabled: user.totpEnabled,
     };
   }
 
   async sendWebsiteLogin(email: string) {
-    email = email.toLowerCase();
     Validator.login.parse({ email });
 
-    const user = await this.userAuthenticationService.getUserByEmail(email);
-    if (!user) return;
+    const user = await this.userService.getUserByEmailWithPassword(email);
+
+    if (!user) {
+      return;
+    }
+
     const lastSendTimeStamp = user.properties.find(
       property => property?.key === USER_PROPERTY_LAST_LOGIN_LINK_SEND
     );
@@ -113,12 +192,14 @@ export class SessionService {
         'User with ID %s requested Login Link multiple times in 15 min time window',
         user.id
       );
+
       return email;
     }
 
     const resetPwdSetting = await this.settingsService.settingByName(
       SettingName.RESET_PASSWORD_JWT_EXPIRES_MIN
     );
+
     const resetPwd =
       (resetPwdSetting?.value as number) ??
       parseInt(process.env.RESET_PASSWORD_JWT_EXPIRES_MIN ?? '');
@@ -130,6 +211,7 @@ export class SessionService {
     const remoteTemplate = await this.mailContext.getUserTemplateName(
       UserEvent.LOGIN_LINK
     );
+
     await this.mailContext.sendMail({
       externalMailTemplateId: remoteTemplate,
       recipient: user,
@@ -138,5 +220,141 @@ export class SessionService {
     });
 
     await this.userAuthenticationService.updateUserLastLoginLinkSend(user.id);
+  }
+
+  async sendPasswordResetEmail(email: string) {
+    const validation = Validator.login.safeParse({ email });
+    if (!validation.success) {
+      throw new BadRequestException('Invalid email address.');
+    }
+
+    // Check if the PASSWORD_RESET template is configured
+    const remoteTemplate = await this.mailContext.getUserTemplateName(
+      UserEvent.PASSWORD_RESET,
+      false
+    );
+
+    if (!remoteTemplate) {
+      throw new BadRequestException(
+        'Password reset is not configured. Please contact your administrator.'
+      );
+    }
+
+    const user = await this.userService.getUserByEmailWithPassword(email);
+
+    // Silently succeed if user doesn't exist (anti-enumeration)
+    if (!user) {
+      return email;
+    }
+
+    await this.mailContext.sendMail({
+      externalMailTemplateId: remoteTemplate,
+      recipient: user,
+      optionalData: {},
+      mailType: mailLogType.UserFlow,
+      jwtOverride: await this.jwtService.generateJWT({
+        id: user.id,
+        expiresInMinutes: 60, // 1 hour
+        audience: 'password-reset',
+      }),
+    });
+
+    return email;
+  }
+
+  async resetPasswordWithToken(token: string, password: string) {
+    let userId: string;
+    try {
+      userId = await this.jwtService.verifyJWT(token, 'password-reset');
+    } catch {
+      throw new BadRequestException('Invalid or expired password reset link.');
+    }
+
+    if (!userId) {
+      throw new BadRequestException('Invalid or expired password reset link.');
+    }
+
+    try {
+      await this.userService.validatePassword(password);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(
+        message || 'Password does not meet the requirements.'
+      );
+    }
+
+    await this.userService.updateUserPassword(userId, password);
+
+    return true;
+  }
+
+  async sendJWTLogin(email: string) {
+    email = email.toLowerCase();
+    await Validator.login.parse({ email });
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: unselectPassword,
+    });
+
+    if (!user) {
+      return email;
+    }
+
+    const remoteTemplate = await this.mailContext.getUserTemplateName(
+      UserEvent.LOGIN_LINK
+    );
+
+    await this.mailContext.sendMail({
+      externalMailTemplateId: remoteTemplate,
+      recipient: user,
+      optionalData: {},
+      mailType: mailLogType.UserFlow,
+    });
+
+    return email;
+  }
+
+  async createJWTForUser(userId: string, expiresInMinutes: number) {
+    const TWO_YEARS_IN_MIN = 2 * 365 * 24 * 60;
+
+    if (expiresInMinutes > TWO_YEARS_IN_MIN) {
+      throw new BadRequestException(
+        `ExpiresInMinutes: ${expiresInMinutes} is too far in the future.`
+      );
+    }
+
+    const expiresAt = new Date(
+      new Date().getTime() + expiresInMinutes * 60 * 1000
+    );
+
+    const token = await this.jwtService.generateJWT({
+      id: userId,
+      expiresInMinutes,
+    });
+
+    return {
+      token,
+      expiresAt,
+    };
+  }
+
+  async createJWTForWebsiteLogin(userId: string) {
+    const expiresInMinutes = 1;
+
+    const expiresAt = new Date(
+      new Date().getTime() + expiresInMinutes * 60 * 1000
+    );
+
+    const token = await this.jwtService.generateJWT({
+      id: userId,
+      expiresInMinutes,
+      audience: 'preview',
+    });
+
+    return {
+      token,
+      expiresAt,
+    };
   }
 }

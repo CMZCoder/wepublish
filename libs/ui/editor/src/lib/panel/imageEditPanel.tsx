@@ -93,7 +93,6 @@ function ImageEditPanel({
 
   const { data, error: loadingError } = useImageQuery({
     variables: { id: id! },
-    fetchPolicy: 'network-only',
     skip: id === undefined,
   });
 
@@ -179,7 +178,11 @@ function ImageEditPanel({
         setImageURL(image.mediumURL ?? '');
         setImageWidth(image.width);
         setImageHeight(image.height);
-        setFocalPoint(image.focalPoint ?? undefined);
+        setFocalPoint(
+          image.focalPoint ?
+            { x: image.focalPoint.x ?? 0.5, y: image.focalPoint.y ?? 0.5 }
+          : undefined
+        );
         setLoading(false);
       } else {
         toaster.push(
@@ -234,7 +237,8 @@ function ImageEditPanel({
       const optimizedImage: File = await resizeImage(file!);
       const { data } = await uploadImage({
         variables: {
-          input: { file: optimizedImage!, ...commonInput },
+          file: optimizedImage!,
+          ...commonInput,
         },
       });
 
@@ -243,7 +247,7 @@ function ImageEditPanel({
       }
     } else {
       const { data } = await updateImage({
-        variables: { id: id!, input: commonInput },
+        variables: { id: id!, ...commonInput },
       });
 
       toaster.push(

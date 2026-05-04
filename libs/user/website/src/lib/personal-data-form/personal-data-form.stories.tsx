@@ -18,6 +18,7 @@ const mockUser = {
   flair: 'Financial Advisor & CEO',
   address: {
     streetAddress: 'Cool Street',
+    streetAddressNumber: '1234',
     zipCode: '12345',
     city: 'Surfers Paradise',
     country: 'Australia',
@@ -28,6 +29,11 @@ const mockUser = {
   permissions: [],
 } as User;
 
+const mockUserWithPendingEmail = {
+  ...mockUser,
+  pendingEmail: 'new-email@mail.com',
+} as User;
+
 const Render = () => {
   const [args, updateArgs] = useArgs();
   const props = args as ComponentProps<typeof PersonalDataForm>;
@@ -35,7 +41,7 @@ const Render = () => {
   return (
     <PersonalDataForm
       {...props}
-      user={mockUser}
+      user={props.user ?? mockUser}
       onUpdate={async data => {
         args.onUpdate(data);
         updateArgs({
@@ -74,9 +80,13 @@ const fillFlair: StoryObj['play'] = async ({ canvasElement, step }) => {
     selector: 'input',
   });
 
-  await step('Enter preferred name', async () => {
+  await step('Enter job position', async () => {
     await userEvent.click(input);
-    await userEvent.clear(input);
+    (input as HTMLInputElement).value = '';
+    // there's a bug in user-event that prevents clear() from working properly
+    // so we workaround it by setting the value to empty first
+    // https://github.com/testing-library/user-event/issues/1143
+    // await userEvent.clear(input);
     await userEvent.type(input, 'Wordpress Ninja & CSS Shaolin');
   });
 };
@@ -94,16 +104,26 @@ const fillName: StoryObj['play'] = async ({ canvasElement, step }) => {
   });
 };
 
-const fillEmail: StoryObj['play'] = async ({ canvasElement, step }) => {
+const requestEmailChange: StoryObj['play'] = async ({
+  canvasElement,
+  step,
+}) => {
   const canvas = within(canvasElement);
 
-  const input = canvas.getByLabelText('Email (nicht bearbeitbar)', {
-    selector: 'input',
+  await step('Open email change form', async () => {
+    const changeButton = canvas.getByText('E-Mail-Adresse ändern');
+    await userEvent.click(changeButton);
   });
 
-  await step('Enter email', async () => {
-    await userEvent.click(input);
-    await userEvent.type(input, 'foobar@email.com');
+  await step('Enter new email and submit', async () => {
+    const newEmailInput = await canvas.findByLabelText('Neue E-Mail-Adresse', {
+      selector: 'input',
+    });
+    await userEvent.click(newEmailInput);
+    await userEvent.type(newEmailInput, 'foobar@email.com');
+
+    const submitButton = canvas.getByText('Änderung beantragen');
+    await userEvent.click(submitButton);
   });
 };
 
@@ -139,13 +159,20 @@ const fillRepeatPassword: StoryObj['play'] = async ({
 const fillStreetName: StoryObj['play'] = async ({ canvasElement, step }) => {
   const canvas = within(canvasElement);
 
-  const input = canvas.getByLabelText('Strasse und Hausnummer', {
+  const streetInput = canvas.getByLabelText('Strasse', {
+    selector: 'input',
+  });
+
+  const numberInput = canvas.getByLabelText('Hausnummer', {
     selector: 'input',
   });
 
   await step('Enter streetName', async () => {
-    await userEvent.click(input);
-    await userEvent.type(input, 'Musterstrasse 1');
+    await userEvent.click(streetInput);
+    await userEvent.type(streetInput, 'Musterstrasse');
+
+    await userEvent.click(numberInput);
+    await userEvent.type(numberInput, '1');
   });
 };
 
@@ -202,7 +229,6 @@ const fillRequired: StoryObj['play'] = async ctx => {
 
   await step('Enter required credentials', async () => {
     await fillName(ctx);
-    await fillEmail(ctx);
   });
 };
 
@@ -230,27 +256,20 @@ const fillBirthday: StoryObj['play'] = async ({ canvasElement, step }) => {
   });
 };
 
-// const deleteImage: StoryObj['play'] = async ({canvasElement, step}) => {
-//   const canvas = within(canvasElement)
-//   const button = canvas.getByTitle('Bild löschen')
-
-//   await step('Click delete image', async () => {
-//     await userEvent.click(button)
-//   })
-// }
-
 export const Default: StoryObj = {
   args: {
     onUpdate: action('onUpdate'),
+    onRequestEmailChange: action('onRequestEmailChange'),
     update: {},
   },
 };
 
-export const WithMediaEmail: StoryObj = {
+export const WithPendingEmail: StoryObj = {
   args: {
     onUpdate: action('onUpdate'),
+    onRequestEmailChange: action('onRequestEmailChange'),
+    user: mockUserWithPendingEmail,
     update: {},
-    mediaEmail: 'some@email.com',
   },
 };
 
@@ -264,6 +283,15 @@ export const Filled: StoryObj = {
     await fillAddress(ctx);
     await clickUpdate(ctx);
   },
+};
+
+export const EmailChangeFlow: StoryObj = {
+  args: {
+    onUpdate: action('onUpdate'),
+    onRequestEmailChange: action('onRequestEmailChange'),
+    update: {},
+  },
+  play: requestEmailChange,
 };
 
 export const Invalid: StoryObj = {
@@ -419,29 +447,3 @@ export const WithUpdateLoading: StoryObj = {
   },
   play: Filled.play,
 };
-
-// export const WithImageActionError: StoryObj = {
-//   args: {
-//     onImageUpload: (...args: unknown[]) => {
-//       action('onImageUpload')(args)
-
-//       throw new ApolloError({
-//         errorMessage: 'Foobar'
-//       })
-//     }
-//   },
-//   play: deleteImage
-// }
-
-// export const WithImageActionLoading: StoryObj = {
-//   args: {
-//     onImageUpload: (...args: unknown[]) => {
-//       action('onImageUpload')(args)
-
-//       return new Promise(() => {
-//         // never resolve
-//       })
-//     }
-//   },
-//   play: deleteImage
-// }

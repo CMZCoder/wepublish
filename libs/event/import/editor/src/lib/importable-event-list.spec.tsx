@@ -7,14 +7,14 @@ import '@testing-library/jest-dom';
 import { format } from 'date-fns';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import {
-  CreateEventDocument,
   ImportedEventsIdsDocument,
-} from '@wepublish/editor/api-v2';
-import * as v2Client from '@wepublish/editor/api-v2';
+  ImportEventDocument,
+} from '@wepublish/editor/api';
+import * as v2Client from '@wepublish/editor/api';
 import {
   ImportedEventListDocument,
   ImportedEventListQuery,
-} from '@wepublish/editor/api-v2';
+} from '@wepublish/editor/api';
 import {
   AuthContext,
   actWait,
@@ -119,9 +119,9 @@ const mocks = [
   },
   {
     request: {
-      query: CreateEventDocument,
+      query: ImportEventDocument,
       variables: {
-        id: '1',
+        id: '2',
         source: 'AgendaBasel',
       },
     },
@@ -134,7 +134,6 @@ const mocks = [
   {
     request: {
       query: ImportedEventsIdsDocument,
-      variables: {},
     },
     result: () => {
       return {

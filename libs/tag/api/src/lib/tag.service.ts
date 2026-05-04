@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, TagType } from '@prisma/client';
 import { getMaxTake, PrimeDataLoader, SortOrder } from '@wepublish/utils/api';
 import { TagDataloader } from './tag.dataloader';
 import {
   CreateTagInput,
   TagFilter,
+  TagListArgs,
   TagSort,
   UpdateTagInput,
 } from './tag.model';
@@ -14,14 +15,14 @@ export class TagService {
   constructor(private prisma: PrismaClient) {}
 
   @PrimeDataLoader(TagDataloader)
-  async getTags(
-    filter?: TagFilter,
-    sort: TagSort = TagSort.CreatedAt,
-    order: SortOrder = SortOrder.Descending,
-    cursorId: string | null = null,
+  async getTags({
+    filter,
+    sort = TagSort.CreatedAt,
+    order = SortOrder.Descending,
+    cursorId,
     skip = 0,
-    take = 10
-  ) {
+    take = 10,
+  }: TagListArgs) {
     const where = createTagFilter(filter);
     const orderBy = createTagOrder(sort, order);
 
@@ -39,7 +40,7 @@ export class TagService {
       }),
     ]);
 
-    const nodes = tags.slice(0, take);
+    const nodes = tags.slice(0, getMaxTake(take));
     const firstTag = nodes[0];
     const lastTag = nodes[nodes.length - 1];
 
@@ -56,6 +57,19 @@ export class TagService {
         endCursor: lastTag?.id,
       },
     };
+  }
+
+  @PrimeDataLoader(TagDataloader)
+  async getTagByName(tag: string, type: TagType) {
+    return this.prisma.tag.findFirst({
+      where: {
+        type,
+        tag: {
+          mode: 'insensitive',
+          equals: tag,
+        },
+      },
+    });
   }
 
   @PrimeDataLoader(TagDataloader)
@@ -126,7 +140,7 @@ function createTagFilter(filter?: TagFilter): Prisma.TagWhereInput {
     conditions.push({
       tag: {
         mode: 'insensitive',
-        equals: filter.tag,
+        contains: filter.tag,
       },
     });
   }

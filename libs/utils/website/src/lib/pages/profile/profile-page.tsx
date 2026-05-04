@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { css } from '@mui/material';
-import { AuthTokenStorageKey } from '@wepublish/authentication/website';
+import { useApolloClient } from '@apollo/client';
 import { ContentWrapper } from '@wepublish/content/website';
 import {
   InvoiceListContainer,
@@ -10,25 +10,28 @@ import {
   SubscriptionListItemWrapper,
   useHasUnpaidInvoices,
 } from '@wepublish/membership/website';
-import { PersonalDataFormContainer } from '@wepublish/user/website';
+import {
+  PersonalDataFormContainer,
+  TotpSetupContainer,
+} from '@wepublish/user/website';
 import {
   addClientCacheToV1Props,
   getV1ApiClient,
-  LoginWithJwtDocument,
   MeDocument,
   NavigationListDocument,
-  ProductType,
   InvoicesDocument,
   SubscriptionsDocument,
-  SessionWithTokenWithoutUser,
+  ProductType,
+  useConfirmEmailChangeMutation,
   useSubscriptionsQuery,
 } from '@wepublish/website/api';
 import { Button, Link, useWebsiteBuilder } from '@wepublish/website/builder';
-import { setCookie } from 'cookies-next';
 import { NextPage, NextPageContext } from 'next';
 import getConfig from 'next/config';
-import { ComponentProps } from 'react';
+import { useRouter } from 'next/router';
+import { ComponentProps, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { handleJwtLogin } from '../../handle-jwt-login';
 import { withAuthGuard } from '../../auth-guard';
 import { ssrAuthLink } from '../../auth-link';
 import { getSessionTokenProps } from '../../get-session-token-props';
@@ -78,27 +81,51 @@ export const ProfileWrapper = styled(ContentWrapper)`
 type ProfilePageProps = Omit<
   ComponentProps<typeof PersonalDataFormContainer>,
   ''
->;
+> & { className?: string };
 
-function ProfilePage(props: ProfilePageProps) {
+function ProfilePage({ className, ...props }: ProfilePageProps) {
   const {
-    elements: { H4 },
+    elements: { H4, Alert },
   } = useWebsiteBuilder();
   const { t } = useTranslation();
+  const router = useRouter();
+  const client = useApolloClient();
+  const [confirmEmailChange, { data: confirmData, error: confirmError }] =
+    useConfirmEmailChangeMutation();
+
+  useEffect(() => {
+    const newEmail = router.query.confirmEmailChange as string | undefined;
+
+    if (newEmail) {
+      const { confirmEmailChange: _, jwt: __, ...query } = router.query;
+      confirmEmailChange({ variables: { newEmail } })
+        .then(async () => {
+          await router.replace({ pathname: '/profile', query }, undefined, {
+            shallow: true,
+          });
+          await client.refetchQueries({ include: ['Me'] });
+        })
+        .catch(async () => {
+          await router.replace({ pathname: '/profile', query }, undefined, {
+            shallow: true,
+          });
+        });
+    }
+  }, [router.query.confirmEmailChange, confirmEmailChange, router]);
 
   const { data: subscriptonData } = useSubscriptionsQuery({
     fetchPolicy: 'cache-only',
   });
 
-  const hasDeactivatedSubscriptions = subscriptonData?.subscriptions.some(
+  const hasDeactivatedSubscriptions = subscriptonData?.userSubscriptions.some(
     subscription => subscription.deactivation
   );
-  const hasActiveSubscriptions = subscriptonData?.subscriptions.some(
+  const hasActiveSubscriptions = subscriptonData?.userSubscriptions.some(
     subscription =>
       !subscription.deactivation &&
       subscription.memberPlan.productType === ProductType.Subscription
   );
-  const hasActiveDonations = subscriptonData?.subscriptions.some(
+  const hasActiveDonations = subscriptonData?.userSubscriptions.some(
     subscription =>
       !subscription.deactivation &&
       subscription.memberPlan.productType === ProductType.Donation
@@ -108,7 +135,13 @@ function ProfilePage(props: ProfilePageProps) {
 
   return (
     <>
-      <SubscriptionsWrapper>
+      {confirmData && (
+        <Alert severity="success">{t('user.emailChangeConfirmed')}</Alert>
+      )}
+
+      {confirmError && <Alert severity="error">{confirmError.message}</Alert>}
+
+      <SubscriptionsWrapper className={className}>
         {hasUnpaidInvoices && (
           <SubscriptionListWrapper>
             <H4 component={'h1'}>Offene Rechnungen</H4>
@@ -172,7 +205,7 @@ function ProfilePage(props: ProfilePageProps) {
                   LinkComponent={Link}
                   href={'/mitmachen'}
                 >
-                  Anderes Abo lösen.
+                  Anderes Abo lösen
                 </Button>
               </SubscriptionListItemContent>
             </SubscriptionListItemWrapper>
@@ -188,10 +221,12 @@ function ProfilePage(props: ProfilePageProps) {
         </SubscriptionListWrapper>
       </SubscriptionsWrapper>
 
-      <ProfileWrapper>
+      <ProfileWrapper className={className}>
         <H4 component={'h1'}>Profil</H4>
 
         <PersonalDataFormContainer {...props} />
+
+        <TotpSetupContainer />
       </ProfileWrapper>
     </>
   );
@@ -212,28 +247,7 @@ GuardedProfile.getInitialProps = async (ctx: NextPageContext) => {
     ),
   ]);
 
-  if (ctx.query.jwt) {
-    const data = await client.mutate({
-      mutation: LoginWithJwtDocument,
-      variables: {
-        jwt: ctx.query.jwt,
-      },
-    });
-
-    setCookie(
-      AuthTokenStorageKey,
-      JSON.stringify(
-        data.data.createSessionWithJWT as SessionWithTokenWithoutUser
-      ),
-      {
-        req: ctx.req,
-        res: ctx.res,
-        expires: new Date(data.data.createSessionWithJWT.expiresAt),
-        sameSite: 'strict',
-        httpOnly: !!publicRuntimeConfig.env.HTTP_ONLY_COOKIE,
-      }
-    );
-  }
+  await handleJwtLogin(ctx, client, !!publicRuntimeConfig.env.HTTP_ONLY_COOKIE);
 
   const sessionProps = await getSessionTokenProps(ctx);
 

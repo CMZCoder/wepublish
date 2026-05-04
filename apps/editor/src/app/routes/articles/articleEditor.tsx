@@ -1,21 +1,17 @@
 import styled from '@emotion/styled';
 import {
-  FullImageFragment,
-  useCreateJwtForWebsiteLoginLazyQuery,
-} from '@wepublish/editor/api';
-import {
   CreateArticleMutationVariables,
   EditorBlockType,
   FullAuthorFragment,
-  getApiClientV2,
+  FullImageFragment,
   SettingName,
   useArticleQuery,
   useCreateArticleMutation,
-  usePaywallListQuery,
+  useCreateJwtForWebsiteLoginMutation,
   usePublishArticleMutation,
   useSettingsListQuery,
   useUpdateArticleMutation,
-} from '@wepublish/editor/api-v2';
+} from '@wepublish/editor/api';
 import { CanPreview } from '@wepublish/permissions';
 import { RichtextElements, RichtextJSONDocument } from '@wepublish/richtext';
 import {
@@ -127,19 +123,14 @@ function ArticleEditor() {
 
   const { t } = useTranslation();
 
-  const client = getApiClientV2();
   const [
     createArticle,
     { data: createData, loading: isCreating, error: createError },
-  ] = useCreateArticleMutation({ client });
+  ] = useCreateArticleMutation();
   const [updateArticle, { loading: isUpdating, error: updateError }] =
-    useUpdateArticleMutation({
-      client,
-    });
+    useUpdateArticleMutation({});
   const [publishArticle, { loading: isPublishing, error: publishError }] =
-    usePublishArticleMutation({
-      client,
-    });
+    usePublishArticleMutation({});
 
   const [isMetaDrawerOpen, setMetaDrawerOpen] = useState(false);
   const [isPublishDialogOpen, setPublishDialogOpen] = useState(false);
@@ -174,7 +165,6 @@ function ArticleEditor() {
   });
 
   useSettingsListQuery({
-    client,
     onCompleted(data) {
       setMetadata(meta => ({
         ...meta,
@@ -185,14 +175,11 @@ function ArticleEditor() {
           )?.value,
         paywall:
           meta.paywall ??
-          !!data.settings.find(
+          data.settings.find(
             setting => setting.name === SettingName.NewArticlePaywall
           )?.value,
       }));
     },
-  });
-  const { data: paywallData } = usePaywallListQuery({
-    client,
   });
 
   const isNew = id === undefined;
@@ -207,15 +194,13 @@ function ArticleEditor() {
     refetch,
     loading: isLoading,
   } = useArticleQuery({
-    client,
     errorPolicy: 'all',
-    fetchPolicy: 'cache-and-network',
     variables: { id: articleID! },
     skip: !articleID,
   });
-
-  const [createJWT] = useCreateJwtForWebsiteLoginLazyQuery({
+  const [createJWT] = useCreateJwtForWebsiteLoginMutation({
     errorPolicy: 'none',
+    fetchPolicy: 'no-cache',
   });
 
   const isNotFound = articleData && !articleData.article;
@@ -238,7 +223,7 @@ function ArticleEditor() {
   );
 
   useEffect(() => {
-    if (articleData?.article) {
+    if (articleData?.article && !hasChanged) {
       const {
         latest,
         shared,
@@ -285,7 +270,7 @@ function ArticleEditor() {
         properties,
         canonicalUrl: canonicalUrl ?? '',
         shared,
-        paywall: !!paywallId,
+        paywall: paywallId,
         hidden,
         disableComments,
         breaking,
@@ -407,7 +392,7 @@ function ArticleEditor() {
       imageID: metadata.image?.id,
       breaking: metadata.breaking,
       shared: !!metadata.shared,
-      paywallId: metadata.paywall ? paywallData?.paywalls?.[0]?.id : null,
+      paywallId: metadata.paywall,
       hidden: metadata.hidden ?? false,
       disableComments: metadata.disableComments ?? false,
       tagIds: metadata.tags,
@@ -662,16 +647,34 @@ function ArticleEditor() {
                     disabled={hasChanged || !id || !canPreview}
                     size="lg"
                     icon={<MdRemoveRedEye />}
-                    // open via button not link as it contains a JWT
                     onClick={async () => {
-                      const { data: jwt } = await createJWT();
-
-                      window.open(
-                        `${articleData!.article.previewUrl}&jwt=${
-                          jwt?.createJWTForWebsiteLogin?.token
-                        }`,
+                      const previewWindow = window.open(
+                        articleData!.article.previewUrl,
                         '_blank'
                       );
+                      if (!previewWindow) return;
+
+                      const { data: jwtData } = await createJWT();
+                      const token = jwtData?.createJWTForWebsiteLogin?.token;
+                      if (!token) return;
+
+                      const targetOrigin = new URL(
+                        articleData!.article.previewUrl
+                      ).origin;
+
+                      const handleMessage = (event: MessageEvent) => {
+                        if (
+                          event.source === previewWindow &&
+                          event.data === 'preview-jwt-ready'
+                        ) {
+                          previewWindow.postMessage(
+                            { previewJwt: token },
+                            targetOrigin
+                          );
+                          window.removeEventListener('message', handleMessage);
+                        }
+                      };
+                      window.addEventListener('message', handleMessage);
                     }}
                   >
                     {t('articleEditor.overview.preview')}
@@ -719,6 +722,11 @@ function ArticleEditor() {
       >
         <PublishArticlePanel
           publishedAtDate={publishedAt}
+          firstPublishedAtDate={
+            articleData?.article?.publishedAt ?
+              new Date(articleData.article.publishedAt)
+            : undefined
+          }
           metadata={metadata}
           onClose={() => setPublishDialogOpen(false)}
           onConfirm={publishedAt => {

@@ -13,10 +13,12 @@
         "tsConfig": "libs/richtext/editor/tsconfig.lib.json",
         "packageJson": "libs/richtext/editor/package.json",
         "main": "libs/richtext/editor/src/index.ts",
-        "assets": [],
+        "assets": ["libs/richtext/editor/*.md"],
+        "external": "all",
         "rootDir": ".",
         "buildableProjectDepsInPackageJsonType": "dependencies",
-        "updateBuildableProjectDepsInPackageJson": true
+        "updateBuildableProjectDepsInPackageJson": true,
+        "generateExportsField": true
       }
     },
     "lint": {

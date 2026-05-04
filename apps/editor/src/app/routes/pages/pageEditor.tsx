@@ -1,17 +1,14 @@
 import styled from '@emotion/styled';
 import {
-  useCreateJwtForWebsiteLoginLazyQuery,
-  useMeQuery,
-} from '@wepublish/editor/api';
-import {
   CreatePageMutationVariables,
-  getApiClientV2,
+  useCreateJwtForWebsiteLoginMutation,
   useCreatePageMutation,
   usePageQuery,
   usePublishPageMutation,
   useUpdatePageMutation,
-} from '@wepublish/editor/api-v2';
+} from '@wepublish/editor/api';
 import { CanPreview } from '@wepublish/permissions';
+import type { AggregatedValidation } from '@wepublish/ui/editor';
 import {
   blockForQueryBlock,
   BlockList,
@@ -19,6 +16,7 @@ import {
   BlockValue,
   createCheckedPermissionComponent,
   EditorTemplate,
+  EditorValidationProvider,
   mapBlockValueToBlockInput,
   NavigationBar,
   PageMetadata,
@@ -26,10 +24,11 @@ import {
   PermissionControl,
   PublishPagePanel,
   StateColor,
+  TeaserOverviewPanel,
   useAuthorisation,
   useUnsavedChangesDialog,
 } from '@wepublish/ui/editor';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   MdCloudUpload,
@@ -49,6 +48,17 @@ import {
   Tag as RTag,
   toaster,
 } from 'rsuite';
+
+const EditorContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+`;
+
+const TeaserOverviewWrapper = styled.div`
+  padding-left: 46px;
+  padding-right: 160px;
+`;
 
 const IconButtonMargins = styled(RIconButton)`
   margin-top: 4px;
@@ -89,17 +99,14 @@ function PageEditor() {
   const params = useParams();
   const { id } = params;
 
-  const client = getApiClientV2();
   const [
     createPage,
     { data: createData, loading: isCreating, error: createError },
-  ] = useCreatePageMutation({ client });
+  ] = useCreatePageMutation();
   const [updatePage, { loading: isUpdating, error: updateError }] =
-    useUpdatePageMutation({ client });
+    useUpdatePageMutation();
   const [publishPage, { loading: isPublishing, error: publishError }] =
-    usePublishPageMutation({
-      client,
-    });
+    usePublishPageMutation({});
 
   const [isMetaDrawerOpen, setMetaDrawerOpen] = useState(false);
   const [isPublishDialogOpen, setPublishDialogOpen] = useState(false);
@@ -130,17 +137,13 @@ function PageEditor() {
     refetch,
     loading: isLoading,
   } = usePageQuery({
-    client,
     errorPolicy: 'all',
-    fetchPolicy: 'cache-and-network',
     variables: { id: pageID! },
     skip: !pageID,
   });
-  const { data: user } = useMeQuery({
-    fetchPolicy: 'cache-only',
-  });
-  const [createJWT] = useCreateJwtForWebsiteLoginLazyQuery({
+  const [createJWT] = useCreateJwtForWebsiteLoginMutation({
     errorPolicy: 'none',
+    fetchPolicy: 'no-cache',
   });
 
   const { t } = useTranslation();
@@ -164,7 +167,7 @@ function PageEditor() {
   );
 
   useEffect(() => {
-    if (pageData?.page) {
+    if (pageData?.page && !hasChanged) {
       const { latest, tags, hidden, slug, url } = pageData.page;
       const {
         title,
@@ -257,7 +260,43 @@ function PageEditor() {
     };
   }
 
+  const validateAll = useRef<() => AggregatedValidation>(() => ({
+    ok: true,
+    failures: [],
+  }));
+
+  function runEditorValidation(reason: 'save' | 'publish' = 'save'): boolean {
+    const result = validateAll.current();
+    if (result.ok) {
+      return true;
+    }
+    const summaries = result.failures
+      .map(f => f.summary)
+      .filter(Boolean)
+      .join(' · ');
+    const header =
+      reason === 'publish' ?
+        t('pageEditor.publishValidationFailed')
+      : t('pageEditor.saveValidationFailed');
+    toaster.push(
+      <Message
+        type="error"
+        showIcon={false}
+        closable
+        duration={5000}
+      >
+        <strong>{header}</strong>
+        <div>{summaries || t('pageEditor.validationFailedGeneric')}</div>
+      </Message>,
+      { placement: 'topEnd' }
+    );
+    return false;
+  }
+
   async function handleSave() {
+    if (!runEditorValidation('save')) {
+      return;
+    }
     const input = createInput();
 
     if (pageID) {
@@ -292,6 +331,9 @@ function PageEditor() {
   }
 
   async function handlePublish(publishedAt: Date) {
+    if (!runEditorValidation('publish')) {
+      return;
+    }
     if (pageID) {
       const { data } = await updatePage({
         variables: { id: pageID, ...createInput() },
@@ -427,6 +469,9 @@ function PageEditor() {
                             icon={<MdCloudUpload />}
                             disabled={isDisabled}
                             onClick={() => {
+                              if (!runEditorValidation('publish')) {
+                                return;
+                              }
                               setPublishDialogOpen(true);
                             }}
                           >
@@ -445,15 +490,33 @@ function PageEditor() {
                     disabled={hasChanged || !id || !canPreview}
                     size="lg"
                     icon={<MdRemoveRedEye />}
-                    // open via button not link as it contains a JWT
-                    // open via button not link as it contains a JWT
                     onClick={async () => {
-                      const { data: jwt } = await createJWT();
-
-                      window.open(
-                        `${pageData!.page.previewUrl}&jwt=${jwt?.createJWTForWebsiteLogin?.token}`,
+                      const previewWindow = window.open(
+                        pageData!.page.previewUrl,
                         '_blank'
                       );
+                      if (!previewWindow) return;
+
+                      const { data: jwtData } = await createJWT();
+                      const token = jwtData?.createJWTForWebsiteLogin?.token;
+                      if (!token) return;
+
+                      const targetOrigin = new URL(pageData!.page.previewUrl)
+                        .origin;
+
+                      const handleMessage = (event: MessageEvent) => {
+                        if (
+                          event.source === previewWindow &&
+                          event.data === 'preview-jwt-ready'
+                        ) {
+                          previewWindow.postMessage(
+                            { previewJwt: token },
+                            targetOrigin
+                          );
+                          window.removeEventListener('message', handleMessage);
+                        }
+                      };
+                      window.addEventListener('message', handleMessage);
                     }}
                   >
                     {t('pageEditor.overview.preview')}
@@ -463,12 +526,23 @@ function PageEditor() {
             />
           }
         >
-          <BlockList
-            value={blocks}
-            onChange={handleChange}
-            disabled={isDisabled || !isAuthorized}
-            blockMap={BlockMap}
-          />
+          <EditorContent>
+            <EditorValidationProvider runAllRef={validateAll}>
+              <TeaserOverviewWrapper>
+                <TeaserOverviewPanel
+                  blocks={blocks}
+                  onChange={handleChange}
+                />
+              </TeaserOverviewWrapper>
+
+              <BlockList
+                value={blocks}
+                onChange={handleChange}
+                disabled={isDisabled || !isAuthorized}
+                blockMap={BlockMap}
+              />
+            </EditorValidationProvider>
+          </EditorContent>
         </EditorTemplate>
       </FieldSet>
 

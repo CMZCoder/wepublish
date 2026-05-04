@@ -1,10 +1,11 @@
-import { BexioPaymentProvider } from './bexio-payment-provider';
+import { BexioPaymentProvider } from '../bexio/bexio-payment-provider';
 import {
   Currency,
+  InvoiceItem,
   PaymentPeriodicity,
   PaymentState,
-  PrismaClient,
 } from '@prisma/client';
+import { createKvMock } from '@wepublish/kv-ttl-cache/api';
 import { CreatePaymentIntentProps } from '../payment-provider';
 
 jest.mock('axios');
@@ -83,34 +84,49 @@ jest.mock('bexio', () => {
 describe('BexioPaymentProvider', () => {
   let mockProps;
   let bexioPaymentProvider;
+  let kvMock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    kvMock = createKvMock();
+    await kvMock.setNs(
+      'settings:paymentprovider',
+      'bexio',
+      JSON.stringify({
+        id: 'bexio',
+        type: 'bexio',
+        name: 'Bexio',
+        offSessionPayments: false,
+        apiKey: 'sampleApiKey',
+        bexio_unitId: 6,
+        bexio_invoiceTemplateNewMembership: 'template1',
+        bexio_invoiceTemplateRenewalMembership: 'template2',
+        bexio_userId: 22,
+        bexio_taxId: 7,
+        bexio_accountId: 8,
+        bexio_countryId: 22,
+        bexio_invoiceTitleNewMembership: 'Title1',
+        bexio_invoiceTitleRenewalMembership: 'Title2',
+        bexio_invoiceMailSubjectNewMembership: 'Subject1',
+        bexio_invoiceMailBodyNewMembership: 'Body1',
+        bexio_invoiceMailSubjectRenewalMembership: 'Subject2',
+        bexio_invoiceMailBodyRenewalMembership: 'Body2',
+        bexio_markInvoiceAsOpen: true,
+      })
+    );
     mockProps = {
-      apiKey: 'sampleApiKey',
-      userId: 123,
-      countryId: 45,
-      invoiceTemplateNewMembership: 'template1',
-      invoiceTemplateRenewalMembership: 'template2',
-      unitId: 6,
-      taxId: 7,
-      accountId: 8,
-      invoiceTitleNewMembership: 'Title1',
-      invoiceTitleRenewalMembership: 'Title2',
-      invoiceMailSubjectNewMembership: 'Subject1',
-      invoiceMailBodyNewMembership: 'Body1',
-      invoiceMailSubjectRenewalMembership: 'Subject2',
-      invoiceMailBodyRenewalMembership: 'Body2',
-      markInvoiceAsOpen: true,
-      prisma: new PrismaClient(),
+      id: 'bexio',
+      prisma: {
+        payment: {
+          findFirst: mockFindFirst,
+        },
+        invoice: {
+          findUnique: mockFindUnique,
+        },
+      } as any,
+      kv: kvMock,
     };
-    bexioPaymentProvider = new BexioPaymentProvider(mockProps);
-  });
 
-  describe('Initialization', () => {
-    it('should properly initialize properties', () => {
-      expect(bexioPaymentProvider).toHaveProperty('apiKey', 'sampleApiKey');
-      expect(bexioPaymentProvider).toHaveProperty('userId', 123);
-    });
+    bexioPaymentProvider = new BexioPaymentProvider(mockProps);
   });
 
   describe('Creating an invoice in Bexio', () => {
@@ -124,6 +140,20 @@ describe('BexioPaymentProvider', () => {
           monthlyAmount: 100,
           paymentPeriodicity: 'monthly',
         },
+        items: [
+          {
+            amount: 50,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+        ],
       };
 
       const result = await bexioPaymentProvider.createInvoice(
@@ -168,7 +198,20 @@ describe('BexioPaymentProvider', () => {
           createdAt: new Date(),
           dueAt: new Date(),
           id: '123',
-          items: [],
+          items: [
+            {
+              amount: 50,
+              quantity: 1,
+            },
+            {
+              amount: 25,
+              quantity: 1,
+            },
+            {
+              amount: 25,
+              quantity: 1,
+            },
+          ] as InvoiceItem[],
           mail: 'dev@wepublish.com',
           modifiedAt: new Date(),
           currency: Currency.EUR,
@@ -200,7 +243,20 @@ describe('BexioPaymentProvider', () => {
         createdAt: new Date(),
         dueAt: new Date(),
         id: '123',
-        items: [],
+        items: [
+          {
+            amount: 50,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+        ] as InvoiceItem[],
         mail: 'dev@wepublish.com',
         modifiedAt: new Date(),
         currency: Currency.CHF,
@@ -218,6 +274,20 @@ describe('BexioPaymentProvider', () => {
   });
   it('should create new contact and new invoice', async () => {
     mockFindUnique.mockResolvedValue({
+      items: [
+        {
+          amount: 50,
+          quantity: 1,
+        },
+        {
+          amount: 25,
+          quantity: 1,
+        },
+        {
+          amount: 25,
+          quantity: 1,
+        },
+      ] as InvoiceItem[],
       subscription: {
         user: {
           email: 'dev@wepublish.ch',
@@ -249,7 +319,20 @@ describe('BexioPaymentProvider', () => {
         createdAt: new Date(),
         dueAt: new Date(),
         id: '123',
-        items: [],
+        items: [
+          {
+            amount: 50,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+        ] as InvoiceItem[],
         mail: 'dev@wepublish.com',
         modifiedAt: new Date(),
         currency: Currency.CHF,
@@ -264,6 +347,20 @@ describe('BexioPaymentProvider', () => {
 
   it('should create new invoice for existing contact', async () => {
     mockFindUnique.mockResolvedValue({
+      items: [
+        {
+          amount: 50,
+          quantity: 1,
+        },
+        {
+          amount: 25,
+          quantity: 1,
+        },
+        {
+          amount: 25,
+          quantity: 1,
+        },
+      ] as InvoiceItem[],
       subscription: {
         user: {
           email: 'dev@wepublish.ch',
@@ -300,7 +397,20 @@ describe('BexioPaymentProvider', () => {
         createdAt: new Date(),
         dueAt: new Date(),
         id: '123',
-        items: [],
+        items: [
+          {
+            amount: 50,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+          {
+            amount: 25,
+            quantity: 1,
+          },
+        ] as InvoiceItem[],
         mail: 'dev@wepublish.com',
         modifiedAt: new Date(),
         currency: Currency.CHF,

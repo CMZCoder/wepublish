@@ -2,22 +2,19 @@ import fs from 'fs';
 import YAML from 'yaml';
 import { MappedReplacer } from 'mapped-replacer';
 import StipeType from 'stripe';
-import {
-  ProLitterisCountPixelProps,
-  TrackingPixelProvider,
-} from '@wepublish/tracking-pixel/api';
-import { GoogleAnalyticsConfig } from '@wepublish/google-analytics/api';
+import { TrackingPixelProvider } from '@wepublish/tracking-pixel/api';
 
 type General = {
   apolloPlayground: boolean;
   apolloIntrospection: boolean;
   bcryptHashCostFactor: number;
-  urlAdapter: 'default' | 'hauptstadt';
+  urlAdapter: 'default' | 'hauptstadt' | 'wepublish-site';
   sessionTTLDays: number;
 };
 
 type MailProvider = {
   id: string;
+  type: string;
   fromAddress: string;
   replyToAddress: string;
   webhookURL: string;
@@ -123,29 +120,21 @@ type PaymentProvider =
   | noCharge
   | Mollie;
 
-type AlgebraicCaptcha = {
-  type: 'algebraic';
-  secret: string;
-  validTime: number;
-  width: number;
-  height: number;
-  background: string;
-  noise: number;
-  minValue: number;
-  maxValue: number;
-  operandAmount: number;
-  operandTypes: string[];
-  mode: string;
-  targetSymbol: string;
-};
-
 type Turnstile = {
   type: 'turnstile';
+  id: string;
   secret: string;
   siteKey: string;
 };
 
-type ProLitteris = ProLitterisCountPixelProps & {
+type HCaptcha = {
+  type: 'hcaptcha';
+  id: string;
+  secret: string;
+  siteKey: string;
+};
+
+type ProLitteris = {
   type: 'prolitteris';
 };
 
@@ -157,14 +146,19 @@ type V0 = {
   systemPrompt: string;
 };
 
+type SyncProvider = {
+  type: 'mailchimp';
+  id: string;
+};
+
 type Config = {
   general: General;
   mailProvider: MailProvider;
   paymentProviders: PaymentProvider[];
   mediaServer: novaMediaServer;
-  challenge: AlgebraicCaptcha | Turnstile;
+  challenge: Turnstile | HCaptcha;
   trackingPixelProviders: TrackingPixels[];
-  ga?: GoogleAnalyticsConfig;
+  syncProviders?: SyncProvider[];
   v0?: V0;
 };
 

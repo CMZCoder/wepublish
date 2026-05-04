@@ -136,6 +136,30 @@ export const CanDeleteImage: Permission = {
   deprecated: false,
 };
 
+export const CanCreateDocument: Permission = {
+  id: 'CAN_CREATE_DOCUMENT',
+  description: 'Allows to create documents',
+  deprecated: false,
+};
+
+export const CanGetDocument: Permission = {
+  id: 'CAN_GET_DOCUMENT',
+  description: 'Allows to get document',
+  deprecated: false,
+};
+
+export const CanGetDocuments: Permission = {
+  id: 'CAN_GET_DOCUMENTS',
+  description: 'Allows to get all documents',
+  deprecated: false,
+};
+
+export const CanDeleteDocument: Permission = {
+  id: 'CAN_DELETE_DOCUMENT',
+  description: 'Allows to delete documents',
+  deprecated: false,
+};
+
 export const CanCreateArticle: Permission = {
   id: 'CAN_CREATE_ARTICLE',
   description: 'Allows to create articles',
@@ -817,6 +841,225 @@ export const CanDeletePaywall: Permission = {
   deprecated: false,
 };
 
+/**
+ * AI Settings
+ */
+export const CanGetAISettings: Permission = {
+  id: 'CAN_GET_AI_SETTINGS',
+  description: 'Allows to get AI provider settings',
+  deprecated: false,
+};
+
+export const CanCreateAISettings: Permission = {
+  id: 'CAN_CREATE_AI_SETTINGS',
+  description: 'Allows to create AI provider settings',
+  deprecated: false,
+};
+
+export const CanUpdateAISettings: Permission = {
+  id: 'CAN_UPDATE_AI_SETTINGS',
+  description: 'Allows to update AI provider settings',
+  deprecated: false,
+};
+
+export const CanDeleteAISettings: Permission = {
+  id: 'CAN_DELETE_AI_SETTINGS',
+  description: 'Allows to delete AI provider settings',
+  deprecated: false,
+};
+
+/**
+ * External Apps
+ */
+export const CanCreateExternalApp: Permission = {
+  id: 'CAN_CREATE_EXTERNAL_APP',
+  description: 'Allows to create external app',
+  deprecated: false,
+};
+
+export const CanUpdateExternalApp: Permission = {
+  id: 'CAN_UPDATE_EXTERNAL_APP',
+  description: 'Allows to update external app',
+  deprecated: false,
+};
+
+export const CanDeleteExternalApp: Permission = {
+  id: 'CAN_DELETE_EXTERNAL_APP',
+  description: 'Allows to delete external app',
+  deprecated: false,
+};
+
+/**
+ * Challenge Provider Settings
+ */
+export const CanGetChallengeProviderSettings: Permission = {
+  id: 'CAN_GET_CHALLENGE_PROVIDER_SETTINGS',
+  description: 'Allows to get challenge provider settings',
+  deprecated: false,
+};
+
+export const CanCreateChallengeProviderSettings: Permission = {
+  id: 'CAN_CREATE_CHALLENGE_PROVIDER_SETTINGS',
+  description: 'Allows to create challenge provider settings',
+  deprecated: false,
+};
+
+export const CanUpdateChallengeProviderSettings: Permission = {
+  id: 'CAN_UPDATE_CHALLENGE_PROVIDER_SETTINGS',
+  description: 'Allows to update challenge provider settings',
+  deprecated: false,
+};
+
+export const CanDeleteChallengeProviderSettings: Permission = {
+  id: 'CAN_DELETE_CHALLENGE_PROVIDER_SETTINGS',
+  description: 'Allows to delete challenge provider settings',
+  deprecated: false,
+};
+
+/**
+ * Payment Provider Settings
+ */
+export const CanGetPaymentProviderSettings: Permission = {
+  id: 'CAN_GET_PAYMENT_PROVIDER_SETTINGS',
+  description: 'Allows to get payment provider settings',
+  deprecated: false,
+};
+
+export const CanCreatePaymentProviderSettings: Permission = {
+  id: 'CAN_CREATE_PAYMENT_PROVIDER_SETTINGS',
+  description: 'Allows to create payment provider settings',
+  deprecated: false,
+};
+
+export const CanUpdatePaymentProviderSettings: Permission = {
+  id: 'CAN_UPDATE_PAYMENT_PROVIDER_SETTINGS',
+  description: 'Allows to update payment provider settings',
+  deprecated: false,
+};
+
+export const CanDeletePaymentProviderSettings: Permission = {
+  id: 'CAN_DELETE_PAYMENT_PROVIDER_SETTINGS',
+  description: 'Allows to delete payment provider settings',
+  deprecated: false,
+};
+
+/**
+ * Tracking Pixel Settings
+ */
+export const CanGetTrackingPixelSettings: Permission = {
+  id: 'CAN_GET_TRACKING_PIXEL_SETTINGS',
+  description: 'Allows to get tracking pixel settings',
+  deprecated: false,
+};
+
+export const CanCreateTrackingPixelSettings: Permission = {
+  id: 'CAN_CREATE_TRACKING_PIXEL_SETTINGS',
+  description: 'Allows to create tracking pixel settings',
+  deprecated: false,
+};
+
+export const CanUpdateTrackingPixelSettings: Permission = {
+  id: 'CAN_UPDATE_TRACKING_PIXEL_SETTINGS',
+  description: 'Allows to update tracking pixel settings',
+  deprecated: false,
+};
+
+export const CanDeleteTrackingPixelSettings: Permission = {
+  id: 'CAN_DELETE_TRACKING_PIXEL_SETTINGS',
+  description: 'Allows to delete tracking pixel settings',
+  deprecated: false,
+};
+
+/**
+ * Mail Provider Settings
+ */
+export const CanGetMailProviderSettings: Permission = {
+  id: 'CAN_GET_MAIL_PROVIDER_SETTINGS',
+  description: 'Allows to get mail provider settings',
+  deprecated: false,
+};
+
+export const CanCreateMailProviderSettings: Permission = {
+  id: 'CAN_CREATE_MAIL_PROVIDER_SETTINGS',
+  description: 'Allows to create mail provider settings',
+  deprecated: false,
+};
+
+export const CanUpdateMailProviderSettings: Permission = {
+  id: 'CAN_UPDATE_MAIL_PROVIDER_SETTINGS',
+  description: 'Allows to update mail provider settings',
+  deprecated: false,
+};
+
+export const CanDeleteMailProviderSettings: Permission = {
+  id: 'CAN_DELETE_MAIL_PROVIDER_SETTINGS',
+  description: 'Allows to delete mail provider settings',
+  deprecated: false,
+};
+
+/**
+ * Analytics Provider Settings Permissions
+ */
+export const CanGetAnalyticsProviderSettings: Permission = {
+  id: 'CAN_GET_ANALYTICS_PROVIDER_SETTINGS',
+  description: 'Allows to get analytics provider settings',
+  deprecated: false,
+};
+
+export const CanCreateAnalyticsProviderSettings: Permission = {
+  id: 'CAN_CREATE_ANALYTICS_PROVIDER_SETTINGS',
+  description: 'Allows to create analytics provider settings',
+  deprecated: false,
+};
+
+export const CanUpdateAnalyticsProviderSettings: Permission = {
+  id: 'CAN_UPDATE_ANALYTICS_PROVIDER_SETTINGS',
+  description: 'Allows to update analytics provider settings',
+  deprecated: false,
+};
+
+export const CanDeleteAnalyticsProviderSettings: Permission = {
+  id: 'CAN_DELETE_ANALYTICS_PROVIDER_SETTINGS',
+  description: 'Allows to delete analytics provider settings',
+  deprecated: false,
+};
+
+/**
+ * Two-Factor Authentication
+ */
+export const CanResetUserTotp: Permission = {
+  id: 'CAN_RESET_USER_TOTP',
+  description: 'Allows to reset the two-factor authentication of a user',
+  deprecated: false,
+};
+
+/**
+ * Mailchimp Sync Settings Permissions
+ */
+export const CanGetMailchimpSyncSettings: Permission = {
+  id: 'CAN_GET_MAILCHIMP_SYNC_SETTINGS',
+  description: 'Allows to get mailchimp sync settings',
+  deprecated: false,
+};
+
+export const CanUpdateMailchimpSyncSettings: Permission = {
+  id: 'CAN_UPDATE_MAILCHIMP_SYNC_SETTINGS',
+  description: 'Allows to update mailchimp sync settings',
+  deprecated: false,
+};
+
+export const CanDeleteMailchimpSyncSettings: Permission = {
+  id: 'CAN_DELETE_MAILCHIMP_SYNC_SETTINGS',
+  description: 'Allows to delete mailchimp sync settings',
+  deprecated: false,
+};
+
+export const CanRunMailchimpSync: Permission = {
+  id: 'CAN_RUN_MAILCHIMP_SYNC',
+  description: 'Allows to manually trigger a mailchimp sync',
+  deprecated: false,
+};
+
 export const AllPermissions: Permission[] = [
   CanGetCrowdfunding,
   CanGetCrowdfundings,
@@ -841,6 +1084,10 @@ export const AllPermissions: Permission[] = [
   CanGetImage,
   CanGetImages,
   CanDeleteImage,
+  CanCreateDocument,
+  CanGetDocument,
+  CanGetDocuments,
+  CanDeleteDocument,
   CanCreateArticle,
   CanGetArticle,
   CanGetArticles,
@@ -942,6 +1189,38 @@ export const AllPermissions: Permission[] = [
   CanUpdatePaywall,
   CanDeletePaywall,
   CanGetAudienceStats,
+  CanGetAISettings,
+  CanCreateAISettings,
+  CanUpdateAISettings,
+  CanDeleteAISettings,
+  CanGetChallengeProviderSettings,
+  CanCreateChallengeProviderSettings,
+  CanUpdateChallengeProviderSettings,
+  CanDeleteChallengeProviderSettings,
+  CanGetPaymentProviderSettings,
+  CanCreatePaymentProviderSettings,
+  CanUpdatePaymentProviderSettings,
+  CanDeletePaymentProviderSettings,
+  CanGetTrackingPixelSettings,
+  CanCreateTrackingPixelSettings,
+  CanUpdateTrackingPixelSettings,
+  CanDeleteTrackingPixelSettings,
+  CanGetMailProviderSettings,
+  CanCreateMailProviderSettings,
+  CanUpdateMailProviderSettings,
+  CanDeleteMailProviderSettings,
+  CanCreateExternalApp,
+  CanUpdateExternalApp,
+  CanDeleteExternalApp,
+  CanGetAnalyticsProviderSettings,
+  CanCreateAnalyticsProviderSettings,
+  CanUpdateAnalyticsProviderSettings,
+  CanDeleteAnalyticsProviderSettings,
+  CanResetUserTotp,
+  CanGetMailchimpSyncSettings,
+  CanUpdateMailchimpSyncSettings,
+  CanDeleteMailchimpSyncSettings,
+  CanRunMailchimpSync,
 ];
 
 export const EditorPermissions: Permission[] = [
@@ -964,6 +1243,10 @@ export const EditorPermissions: Permission[] = [
   CanCreateImage,
   CanGetImage,
   CanGetImages,
+  CanCreateDocument,
+  CanGetDocument,
+  CanGetDocuments,
+  CanDeleteDocument,
   CanCreateArticle,
   CanGetArticle,
   CanGetArticles,

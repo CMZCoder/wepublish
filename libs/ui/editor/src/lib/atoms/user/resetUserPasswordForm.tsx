@@ -1,7 +1,7 @@
 import { useResetUserPasswordMutation } from '@wepublish/editor/api';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Checkbox, Form, Notification, Schema, toaster } from 'rsuite';
+import { Button, Form, Notification, Schema, toaster } from 'rsuite';
 
 export interface ResetUserPasswordPanelProps {
   userID?: string;
@@ -15,7 +15,6 @@ export function ResetUserPasswordForm({
   onClose,
 }: ResetUserPasswordPanelProps) {
   const [password, setPassword] = useState('');
-  const [sendMail, setSendMail] = useState<boolean>(false);
 
   const [resetUserPassword, { loading: isUpdating, error: updateError }] =
     useResetUserPasswordMutation();
@@ -29,7 +28,7 @@ export function ResetUserPasswordForm({
   const validationModel = Schema.Model({
     password: StringType()
       .isRequired(t('errorMessages.noPasswordErrorMessage'))
-      .minLength(8, t('errorMessages.passwordTooShortErrorMessage')),
+      .minLength(12, t('errorMessages.passwordTooShortErrorMessage')),
   });
 
   return (
@@ -45,10 +44,9 @@ export function ResetUserPasswordForm({
           variables: {
             id: userID,
             password,
-            sendMail,
           },
         });
-        if (data?.resetUserPassword) {
+        if (data?.resetPassword) {
           toaster.push(
             <Notification
               type="success"
@@ -74,14 +72,6 @@ export function ResetUserPasswordForm({
           value={password}
           onChange={(value: string) => setPassword(value)}
         />
-
-        <Checkbox
-          style={{ marginTop: '8px' }}
-          checked={sendMail}
-          onChange={(value, checked) => setSendMail(checked)}
-        >
-          {t('resetUserPasswordForm.sendMail')}
-        </Checkbox>
       </Form.Group>
 
       <Button

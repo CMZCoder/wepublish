@@ -3,11 +3,13 @@ import { MailTemplate, PrismaClient } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { matches } from 'lodash';
 import bodyParser from 'body-parser';
-import Mailgun from 'mailgun.js';
-import FormData from 'form-data';
 import { MailContext } from './mail-context';
-import { MailchimpMailProvider, MailgunMailProvider } from './mail-provider';
 import { MailController, mailLogType } from './mail.controller';
+import { KvTtlCacheService } from '@wepublish/kv-ttl-cache/api';
+import { createKvMock } from '@wepublish/kv-ttl-cache/api';
+import { MailchimpMailProvider } from './mail-provider/mailchimp-mail-provider';
+import { MailgunMailProvider } from './mail-provider/mailgun-mail-provider';
+const kvMock = createKvMock();
 
 describe('MailController', () => {
   let mailContext: MailContext;
@@ -56,6 +58,11 @@ describe('MailController', () => {
     flair: null,
     userImageID: null,
     note: null,
+    pendingEmail: null,
+    pendingEmailAt: null,
+    totpSecret: null,
+    totpEnabled: false,
+    totpExempt: false,
   };
 
   beforeEach(async () => {
@@ -83,26 +90,42 @@ describe('MailController', () => {
           useValue: prismaMock,
         },
         {
+          provide: KvTtlCacheService,
+          useValue: kvMock,
+        },
+        {
           provide: MailContext,
-          useFactory: (prisma: PrismaClient) => {
-            return new MailContext({
-              prisma,
-              mailProvider: new MailchimpMailProvider({
+          useFactory: async (prisma: PrismaClient, kv: KvTtlCacheService) => {
+            await kv.setNs(
+              'settings:mailprovider',
+              'mailchimp',
+              JSON.stringify({
                 id: 'mailchimp',
+                type: 'mailchimp',
                 name: 'Mailchimp',
                 fromAddress: 'dev@wepublish.ch',
+                replyTpAddress: 'dev@wepublish.ch',
                 webhookEndpointSecret: 'secret',
                 apiKey: 'key',
-                baseURL: '',
+                mailchimp_baseURL: '',
+              })
+            );
+
+            return new MailContext({
+              mailProvider: new MailchimpMailProvider({
+                id: 'mailchimp',
                 incomingRequestHandler: bodyParser.urlencoded({
                   extended: true,
                 }),
+                kv,
+                prisma,
               }),
-              defaultFromAddress: 'defaultFromAddress@example.com',
-              defaultReplyToAddress: 'defaultReplyToAddress@example.com',
+              kv,
+              prisma,
+              jwtGenerator: async () => 'test-jwt-token',
             });
           },
-          inject: [PrismaClient],
+          inject: [PrismaClient, KvTtlCacheService],
         },
       ],
     }).compile();
@@ -165,9 +188,7 @@ describe('MailController', () => {
                   { name: 'user_email', content: 'test-user@wepublish.com' },
                   { name: 'user_name', content: 'User' },
                   { name: 'user_firstName', content: 'Test' },
-                  { name: 'user_password', content: 'hidden' },
                   { name: 'user_active', content: true },
-                  { name: 'user_roleIDs_0', content: 'hidden' },
                   { name: 'optional_root1_n1_n2_n3_depth', content: 3 },
                   { name: 'optional_root1_n1_n2_depth', content: 2 },
                   { name: 'optional_root1_n1_depth', content: 1 },
@@ -232,20 +253,27 @@ describe('MailController', () => {
         'Content-Type': 'application/json',
       });
 
-    const mailgunClient = new Mailgun(FormData).client({
-      username: 'api',
-      key: 'fake-key',
-    });
+    await kvMock.setNs(
+      'settings:mailprovider',
+      'mailgun',
+      JSON.stringify({
+        id: 'mailgun',
+        type: 'mailgun',
+        name: 'Mailgun',
+        fromAddress: 'dev@wepublish.ch',
+        replyToAddress: 'dev@wepublish.ch',
+        webhookEndpointSecret: 'webhookEndpointSecret',
+        apiKey: 'key',
+        mailgun_mailDomain: 'test.wepublish.com',
+        mailgun_baseDomain: 'api.eu.mailgun.net',
+      })
+    );
+
     mailContext.mailProvider = new MailgunMailProvider({
       id: 'mailgun',
-      name: 'Mailgun',
-      fromAddress: 'dev@wepublish.ch',
-      webhookEndpointSecret: 'webhookEndpointSecret',
-      baseDomain: 'api.eu.mailgun.net',
-      mailDomain: 'test.wepublish.com',
-      apiKey: 'key',
       incomingRequestHandler: bodyParser.json(),
-      mailgunClient,
+      prisma: prismaMock as any,
+      kv: kvMock,
     });
 
     const periodicJobRunDate = new Date();

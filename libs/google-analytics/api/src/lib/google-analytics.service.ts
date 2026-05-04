@@ -1,68 +1,141 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { JWTInput } from 'google-auth-library';
 import { format } from 'date-fns';
 import { HotAndTrendingDataSource } from '@wepublish/article/api';
 import { getMaxTake } from '@wepublish/utils/api';
+import { GoogleAnalyticsDbConfig } from './google-analytics-db-config';
+import { KvTtlCacheService } from '@wepublish/kv-ttl-cache/api';
 
 export const GA_CLIENT_OPTIONS = Symbol('GA_CLIENT_OPTIONS');
+
 export type GoogleAnalyticsConfig = {
   credentials?: JWTInput;
-  property?: string;
+  property?: string | null;
   articlePrefix: string;
 };
 
+const GA_TIMEOUT_MS = 5_000;
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000;
+const RESULT_CACHE_TTL_S = 5 * 60;
+
 @Injectable()
 export class GoogleAnalyticsService implements HotAndTrendingDataSource {
-  private analyticsDataClient = new BetaAnalyticsDataClient({
-    credentials: this.config.credentials,
-  });
+  private readonly logger = new Logger(GoogleAnalyticsService.name);
+  private cachedClient: BetaAnalyticsDataClient | null = null;
+  private cachedClientEmail: string | null = null;
+
+  private consecutiveFailures = 0;
+  private circuitOpenUntil = 0;
 
   constructor(
     private prisma: PrismaClient,
     @Inject(GA_CLIENT_OPTIONS)
-    private config: GoogleAnalyticsConfig
+    private configProvider: GoogleAnalyticsDbConfig,
+    private kv: KvTtlCacheService
   ) {}
 
-  async getMostViewedArticles({
-    start,
-    take,
-    skip,
-  }: Parameters<HotAndTrendingDataSource['getMostViewedArticles']>[0]) {
-    if (!this.config.credentials || !this.config.property) {
-      console.warn(
-        'GoogleAnalyticsService.getMostViewedArticles: No Google Analytics credentials set, returning empty array'
-      );
-
-      return [];
+  private isCircuitOpen(): boolean {
+    if (this.consecutiveFailures < CIRCUIT_BREAKER_THRESHOLD) {
+      return false;
     }
+
+    if (Date.now() >= this.circuitOpenUntil) {
+      this.consecutiveFailures = 0;
+      return false;
+    }
+
+    return true;
+  }
+
+  private recordFailure(): void {
+    this.consecutiveFailures++;
+
+    if (this.consecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD) {
+      this.circuitOpenUntil = Date.now() + CIRCUIT_BREAKER_COOLDOWN_MS;
+      this.logger.warn(
+        `Circuit breaker open after ${this.consecutiveFailures} consecutive GA4 failures. ` +
+          `Skipping GA4 calls for ${CIRCUIT_BREAKER_COOLDOWN_MS / 1000}s.`
+      );
+    }
+  }
+
+  private recordSuccess(): void {
+    this.consecutiveFailures = 0;
+  }
+
+  private getClient(credentials: JWTInput): BetaAnalyticsDataClient {
+    if (
+      this.cachedClient &&
+      this.cachedClientEmail === credentials.client_email
+    ) {
+      return this.cachedClient;
+    }
+
+    this.cachedClient?.close();
+    this.cachedClient = new BetaAnalyticsDataClient({ credentials });
+    this.cachedClientEmail = credentials.client_email ?? null;
+
+    return this.cachedClient;
+  }
+
+  private async loadArticleViewMap(
+    config: GoogleAnalyticsConfig & {
+      credentials: JWTInput;
+      property: string;
+    },
+    start?: Date | null
+  ): Promise<Record<string, number>> {
+    if (this.isCircuitOpen()) {
+      this.logger.warn('Circuit breaker is open, skipping GA4 call');
+      throw new Error('Circuit breaker is open');
+    }
+
+    const analyticsDataClient = this.getClient(config.credentials);
 
     const thirtyDaysAgo = new Date(
       new Date().getTime() - 60 * 60 * 24 * 31 * 1000
     );
 
-    const [{ rows }] = await this.analyticsDataClient.runReport({
-      property: `properties/${this.config.property}`,
-      dateRanges: [
+    let rows;
+    try {
+      const [result] = await analyticsDataClient.runReport(
         {
-          startDate: format(start ?? thirtyDaysAgo, 'yyyy-MM-dd'),
-          endDate: 'today',
+          property: `properties/${config.property}`,
+          dateRanges: [
+            {
+              startDate: format(start ?? thirtyDaysAgo, 'yyyy-MM-dd'),
+              endDate: 'today',
+            },
+          ],
+          dimensions: [
+            {
+              name: 'pagePath',
+            },
+          ],
+          metrics: [
+            {
+              name: 'activeUsers',
+            },
+          ],
         },
-      ],
-      dimensions: [
         {
-          name: 'pagePath',
-        },
-      ],
-      metrics: [
-        {
-          name: 'activeUsers',
-        },
-      ],
-    });
+          timeout: GA_TIMEOUT_MS,
+        }
+      );
+      this.recordSuccess();
+      rows = result.rows ?? [];
+    } catch (error) {
+      this.recordFailure();
+      this.logger.error(
+        `GA4 runReport failed: ${error instanceof Error ? error.message : error}`
+      );
+      throw error;
+    }
 
-    const articleViewMap = (rows ?? []).reduce(
+    const articleViewMap: Record<string, number> = (rows ?? []).reduce(
       (object, { dimensionValues, metricValues }) => {
         if (!dimensionValues?.at(0) || !metricValues?.at(0)) {
           return object;
@@ -71,24 +144,64 @@ export class GoogleAnalyticsService implements HotAndTrendingDataSource {
         const [{ value: slug }] = dimensionValues;
         const [{ value: views }] = metricValues;
 
-        if (!slug?.startsWith(this.config.articlePrefix) || !views) {
+        if (!slug?.startsWith(config.articlePrefix) || !views) {
           return object;
         }
 
         // Don't include sub pages of the article prefix
         if (
-          slug?.split('/').length !==
-          this.config.articlePrefix.split('/').length
+          slug?.split('/').length !== config.articlePrefix.split('/').length
         ) {
           return object;
         }
 
-        object[slug.replace(this.config.articlePrefix, '')] = +views;
+        object[slug.replace(config.articlePrefix, '')] = +views;
 
         return object;
       },
       {} as Record<string, number>
     );
+
+    return articleViewMap;
+  }
+
+  async getMostViewedArticles({
+    start,
+    take,
+    skip,
+  }: Parameters<HotAndTrendingDataSource['getMostViewedArticles']>[0]) {
+    const config = await this.configProvider.getGoogleAnalytics();
+
+    if (!config.credentials || !config.property) {
+      this.logger.warn(
+        'No Google Analytics credentials set, returning empty array'
+      );
+
+      return [];
+    }
+
+    let articleViewMap: Record<string, number>;
+    try {
+      articleViewMap = await this.kv.getOrLoadNs<Record<string, number>>(
+        'ga4',
+        'article-view-map',
+        () =>
+          this.loadArticleViewMap(
+            config as GoogleAnalyticsConfig & {
+              credentials: JWTInput;
+              property: string;
+            },
+            start
+          ),
+        RESULT_CACHE_TTL_S
+      );
+    } catch (error) {
+      return [];
+    }
+
+    if (!Object.keys(articleViewMap).length) {
+      return [];
+    }
 
     // Adding a number (even as string) to an object key ignores sorting
     // So we have to re-sort the array

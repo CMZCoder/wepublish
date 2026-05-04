@@ -13,7 +13,6 @@ import { GraphQLRichText } from '@wepublish/richtext/api';
 import { HasImage, Image } from '@wepublish/image/api';
 import { HasOptionalPeerLc, Peer } from '@wepublish/peering/api';
 import { GraphQLSlug, PaginatedType, SortOrder } from '@wepublish/utils/api';
-import { Tag } from '@wepublish/tag/api';
 import { RichtextJSONDocument } from '@wepublish/richtext';
 
 @ObjectType()
@@ -54,20 +53,8 @@ export class Author implements HasImage, HasOptionalPeerLc {
   @Field({ nullable: true })
   jobTitle?: string;
 
-  @Field(() => [AuthorLink], { nullable: true })
-  links?: AuthorLink[];
-
   @Field(() => GraphQLRichText, { nullable: true })
   bio?: RichtextJSONDocument;
-
-  @Field(() => [Tag])
-  tags!: Tag[];
-
-  imageID?: string;
-  image?: Image;
-
-  peerId?: string;
-  peer?: Peer;
 
   @Field()
   hideOnArticle!: boolean;
@@ -78,8 +65,10 @@ export class Author implements HasImage, HasOptionalPeerLc {
   @Field()
   hideOnTeam!: boolean;
 
-  @Field()
-  url!: string;
+  imageID?: string;
+  image?: Image;
+  peerId?: string;
+  peer?: Peer;
 }
 
 @InputType()
@@ -106,7 +95,7 @@ registerEnumType(AuthorSort, {
 });
 
 @ArgsType()
-export class AuthorsQueryArgs {
+export class AuthorListArgs {
   @Field(() => AuthorFilter, { nullable: true })
   filter?: AuthorFilter;
 
@@ -123,7 +112,7 @@ export class AuthorsQueryArgs {
   order?: SortOrder;
 
   @Field({ nullable: true })
-  cursor?: string;
+  cursorId?: string;
 
   @Field(() => Int, { nullable: true })
   skip?: number;
@@ -137,7 +126,7 @@ export class AuthorArgs {
   @Field({ nullable: true })
   id?: string;
 
-  @Field(() => GraphQLSlug, { nullable: true })
+  @Field({ nullable: true })
   slug?: string;
 }
 

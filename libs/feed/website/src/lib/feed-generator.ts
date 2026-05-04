@@ -11,6 +11,10 @@ export const toHtml = async (document: RichtextJSONDocument) => {
   return generateHTML(document, editorConfig.extensions ?? []);
 };
 
+const escapeXml = (str: string): string => {
+  return str.replace(/&/g, '&amp;');
+};
+
 export const generateFeed =
   ({
     categories = [],
@@ -40,10 +44,11 @@ export const generateFeed =
 
       return {
         title: seo.schema.headline ?? '',
-        image: seo.schema.image?.url ?? undefined,
+        image:
+          seo.schema.image?.url ? escapeXml(seo.schema.image.url) : undefined,
         description: seo.schema.description,
         content: content ? content : (article.latest.lead ?? undefined),
-        author: article.latest.authors.map(author => ({
+        author: article.latest.authors.filter(Boolean).map(author => ({
           name: author.name,
           link: author.url,
         })),

@@ -3,19 +3,13 @@ import {
   Authenticated,
   AuthSessionType,
   CurrentUser,
-  Public,
   UserSession,
 } from '@wepublish/authentication/api';
-import { UserService } from './user.service';
-import {
-  PaymentProviderCustomer,
-  PaymentProviderCustomerInput,
-  SensitiveDataUser,
-  UserInput,
-} from './user.model';
-import { UserInputError } from '@nestjs/apollo';
+import { SensitiveDataUser } from './user.model';
 import { UploadImageInput } from '@wepublish/image/api';
 import { ProfileService } from './profile.service';
+import { BadRequestException } from '@nestjs/common';
+import { UserService } from './user.service';
 
 @Resolver()
 export class ProfileResolver {
@@ -24,14 +18,12 @@ export class ProfileResolver {
     private profileService: ProfileService
   ) {}
 
-  @Public()
+  @Authenticated()
   @Query(() => SensitiveDataUser, {
     description: `This query returns the user.`,
     nullable: true,
   })
-  async me(
-    @CurrentUser() session: UserSession
-  ): Promise<SensitiveDataUser | null> {
+  async me(@CurrentUser() session: UserSession) {
     if (session?.type !== AuthSessionType.User) {
       return null;
     }
@@ -49,31 +41,14 @@ export class ProfileResolver {
     @CurrentUser() { user }: UserSession
   ) {
     if (password !== passwordRepeated) {
-      throw new UserInputError('password and passwordRepeated are not equal');
+      throw new BadRequestException(
+        'password and passwordRepeated are not equal'
+      );
     }
+
+    await this.userService.validatePassword(password);
 
     return this.userService.updateUserPassword(user.id, password);
-  }
-
-  @Authenticated()
-  @Mutation(() => [PaymentProviderCustomer], {
-    description: `This mutation allows to update the Payment Provider Customers`,
-  })
-  async updatePaymentProviderCustomers(
-    @Args('input', { type: () => [PaymentProviderCustomerInput] })
-    input: PaymentProviderCustomerInput[],
-    @CurrentUser() session: UserSession
-  ) {
-    const user = await this.profileService.updatePaymentProviderCustomers(
-      session.user.id,
-      input
-    );
-
-    if (!user) {
-      throw new UserInputError(`User not found ${session.user.id}`);
-    }
-
-    return user.paymentProviderCustomers;
   }
 
   @Authenticated()
@@ -82,11 +57,7 @@ export class ProfileResolver {
     description: `This mutation allows to upload and update the user's profile image.`,
   })
   async uploadUserProfileImage(
-    @Args('uploadImageInput', {
-      type: () => UploadImageInput,
-      nullable: true,
-    })
-    uploadImageInput: UploadImageInput | null,
+    @Args() uploadImageInput: UploadImageInput,
     @CurrentUser() session: UserSession
   ) {
     return this.profileService.uploadUserProfileImage(
@@ -96,14 +67,26 @@ export class ProfileResolver {
   }
 
   @Authenticated()
-  @Mutation(() => SensitiveDataUser, {
-    nullable: true,
-    description: `This mutation allows to update the user's data by taking an input of type UserInput.`,
+  @Mutation(() => Boolean, {
+    description:
+      'Requests an email change. A confirmation link is sent to the current email address.',
   })
-  async updateUser(
-    @Args('input') input: UserInput,
-    @CurrentUser() session: UserSession
+  async requestEmailChange(
+    @Args('newEmail') newEmail: string,
+    @CurrentUser() { user }: UserSession
+  ): Promise<boolean> {
+    await this.userService.requestEmailChange(user.id, newEmail);
+    return true;
+  }
+
+  @Authenticated()
+  @Mutation(() => SensitiveDataUser, {
+    description: 'Confirms a pending email change for the logged-in user.',
+  })
+  async confirmEmailChange(
+    @Args('newEmail') newEmail: string,
+    @CurrentUser() { user }: UserSession
   ) {
-    return this.profileService.updatePublicUser(session.user, input);
+    return this.userService.confirmEmailChange(user.id, newEmail);
   }
 }

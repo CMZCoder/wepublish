@@ -1,14 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { FileUpload } from 'graphql-upload';
-import { UploadImage } from './image-upload';
-import { Image } from './image.model';
 import { ImageTransformation } from './image-transformation.model';
+import { ImageWithFocalPoint } from './image-dataloader.service';
+import { UploadImage } from './image-upload.service';
 
 export interface ArrayBufferUpload {
   filename: string;
   mimetype: string;
   arrayBuffer: ArrayBuffer;
 }
+
+export type UploadDocument = {
+  id: string;
+  filename: string;
+  fileSize: number;
+  mimeType: string;
+  extension: string;
+};
 
 @Injectable()
 export abstract class MediaAdapter {
@@ -21,7 +29,21 @@ export abstract class MediaAdapter {
   abstract deleteImage(id: string): Promise<boolean>;
 
   abstract getImageURL(
-    image: Image,
+    image: ImageWithFocalPoint,
     transformation?: ImageTransformation | undefined
   ): Promise<string>;
+
+  abstract uploadDocument(
+    fileUpload: Promise<FileUpload>
+  ): Promise<UploadDocument>;
+
+  abstract deleteDocument(id: string): Promise<boolean>;
+
+  abstract getDocumentURL(document: {
+    id: string;
+    filename?: string | null;
+    extension?: string;
+  }): Promise<string>;
+
+  abstract getDocumentThumbnailURL(document: { id: string }): Promise<string>;
 }

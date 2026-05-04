@@ -1,6 +1,7 @@
 //@ts-check
 
 const { composePlugins, withNx } = require('@nx/next');
+const { withSentryConfig } = require('@sentry/nextjs');
 const wepNextConfig = require('../../libs/utils/website/src/lib/next.config');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled:
@@ -17,6 +18,7 @@ const nextConfig = {
     env: {
       API_URL: process.env.API_URL || '',
       GA_ID: process.env.GA_ID || '',
+      GTM_ID: process.env.GTM_ID || '',
     },
   },
   async redirects() {
@@ -37,4 +39,6 @@ const plugins = [
   withBundleAnalyzer,
 ];
 
-module.exports = composePlugins(...plugins)(nextConfig);
+module.exports = withSentryConfig(composePlugins(...plugins)(nextConfig), {
+  silent: true,
+});

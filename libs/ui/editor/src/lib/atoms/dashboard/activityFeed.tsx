@@ -1,9 +1,8 @@
 import styled from '@emotion/styled';
 import {
-  getApiClientV2,
   RecentActionsQuery,
   useRecentActionsQuery,
-} from '@wepublish/editor/api-v2';
+} from '@wepublish/editor/api';
 import { toPlaintext } from '@wepublish/richtext';
 import { formatDistanceToNow } from 'date-fns';
 import { ReactNode, useEffect } from 'react';
@@ -63,11 +62,7 @@ const TimelineIcon = styled(Avatar)`
 type Action = NonNullable<RecentActionsQuery['actions']>[number];
 
 export function ActivityFeed() {
-  const client = getApiClientV2();
-  const { data, error } = useRecentActionsQuery({
-    client,
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data, error } = useRecentActionsQuery({});
 
   const actions = data?.actions ?? [];
 

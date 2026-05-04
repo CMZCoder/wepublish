@@ -16,6 +16,7 @@ export const unselectPassword: Record<
     | 'mailSent'
     | 'articleRevisions'
     | 'pageRevisions'
+    | 'mailchimpSyncErrors'
   >,
   boolean
 > = {
@@ -29,6 +30,8 @@ export const unselectPassword: Record<
   modifiedAt: true,
   email: true,
   emailVerifiedAt: true,
+  pendingEmail: true,
+  pendingEmailAt: true,
   name: true,
   firstName: true,
   flair: true,
@@ -37,4 +40,7 @@ export const unselectPassword: Record<
   active: true,
   lastLogin: true,
   roleIDs: true,
+  totpSecret: false,
+  totpEnabled: true,
+  totpExempt: true,
 } as const;

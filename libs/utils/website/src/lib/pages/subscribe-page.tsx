@@ -1,16 +1,18 @@
-import { setCookie } from 'cookies-next';
 import { NextPageContext } from 'next';
 import getConfig from 'next/config';
 import { useRouter } from 'next/router';
 import { ssrAuthLink } from '../auth-link';
 import { getSessionTokenProps } from '../get-session-token-props';
-import { SessionWithTokenWithoutUser } from '@wepublish/website/api';
+import { handleJwtLogin } from '../handle-jwt-login';
+import { useSubscriptionsQuery } from '@wepublish/website/api';
 import { MemberPlanListQueryVariables } from '@wepublish/website/api';
-import { AuthTokenStorageKey } from '@wepublish/authentication/website';
-import { SubscribeContainer } from '@wepublish/membership/website';
+import { useUser } from '@wepublish/authentication/website';
+import {
+  SubscribeContainer,
+  UpgradeContainer,
+} from '@wepublish/membership/website';
 import {
   getV1ApiClient,
-  LoginWithJwtDocument,
   MemberPlanListDocument,
   NavigationListDocument,
   PeerProfileDocument,
@@ -18,7 +20,7 @@ import {
   InvoicesDocument,
   addClientCacheToV1Props,
 } from '@wepublish/website/api';
-import { ComponentProps } from 'react';
+import { ComponentProps, useMemo } from 'react';
 
 type SubscribePageProps = Omit<ComponentProps<typeof SubscribeContainer>, ''>;
 
@@ -31,46 +33,94 @@ export function SubscribePage(props: SubscribePageProps) {
       mail,
       lastName,
       deactivateSubscriptionId,
+      upgradeSubscriptionId,
       userId,
     },
   } = useRouter();
 
+  const { hasUser } = useUser();
+
+  const userSubscriptions = useSubscriptionsQuery({
+    fetchPolicy: 'cache-only',
+    skip: !hasUser,
+  });
+
+  const subscriptionToUpgrade = useMemo(() => {
+    return userSubscriptions.data?.userSubscriptions.find(
+      subscription => subscription.id === upgradeSubscriptionId
+    );
+  }, [upgradeSubscriptionId, userSubscriptions.data?.userSubscriptions]);
+
   return (
-    <SubscribeContainer
-      {...props}
-      defaults={{
-        email: mail as string | undefined,
-        firstName: firstName as string | undefined,
-        name: lastName as string | undefined,
-        memberPlanSlug: memberPlanBySlug as string | undefined,
-        ...props.defaults,
-      }}
-      filter={memberPlans => {
-        const parentFiltered = props.filter?.(memberPlans) ?? memberPlans;
+    <>
+      {!subscriptionToUpgrade && (
+        <SubscribeContainer
+          {...props}
+          defaults={{
+            email: mail as string | undefined,
+            firstName: firstName as string | undefined,
+            name: lastName as string | undefined,
+            memberPlanSlug: memberPlanBySlug as string | undefined,
+            ...props.defaults,
+          }}
+          filter={memberPlans => {
+            const parentFiltered = props.filter?.(memberPlans) ?? memberPlans;
 
-        const preselectedMemberPlan = parentFiltered.find(
-          ({ slug }) => slug === memberPlanBySlug
-        );
+            const preselectedMemberPlan = parentFiltered.find(
+              ({ slug }) => slug === memberPlanBySlug
+            );
 
-        if (additionalMemberPlans === 'upsell' && preselectedMemberPlan) {
-          return parentFiltered.filter(
-            memberPlan =>
-              memberPlan.amountPerMonthMin >=
-                preselectedMemberPlan.amountPerMonthMin ||
-              memberPlan === preselectedMemberPlan
-          );
-        }
+            if (additionalMemberPlans === 'upsell' && preselectedMemberPlan) {
+              return parentFiltered.filter(
+                memberPlan =>
+                  memberPlan.amountPerMonthMin >=
+                    preselectedMemberPlan.amountPerMonthMin ||
+                  memberPlan === preselectedMemberPlan
+              );
+            }
 
-        return preselectedMemberPlan && additionalMemberPlans !== 'all' ?
-            [preselectedMemberPlan]
-          : parentFiltered;
-      }}
-      deactivateSubscriptionId={
-        props.deactivateSubscriptionId ??
-        (deactivateSubscriptionId as string | undefined)
-      }
-      returningUserId={userId as string | undefined}
-    />
+            return preselectedMemberPlan && additionalMemberPlans !== 'all' ?
+                [preselectedMemberPlan]
+              : parentFiltered;
+          }}
+          deactivateSubscriptionId={
+            props.deactivateSubscriptionId ??
+            (deactivateSubscriptionId as string | undefined)
+          }
+          returningUserId={userId as string | undefined}
+        />
+      )}
+
+      {subscriptionToUpgrade && (
+        <UpgradeContainer
+          {...props}
+          defaults={{
+            memberPlanSlug: memberPlanBySlug as string | undefined,
+          }}
+          filter={memberPlans => {
+            const parentFiltered = props.filter?.(memberPlans) ?? memberPlans;
+
+            const preselectedMemberPlan = parentFiltered.find(
+              ({ slug }) => slug === memberPlanBySlug
+            );
+
+            if (additionalMemberPlans === 'upsell' && preselectedMemberPlan) {
+              return parentFiltered.filter(
+                memberPlan =>
+                  memberPlan.amountPerMonthMin >=
+                    preselectedMemberPlan.amountPerMonthMin ||
+                  memberPlan === preselectedMemberPlan
+              );
+            }
+
+            return preselectedMemberPlan && additionalMemberPlans !== 'all' ?
+                [preselectedMemberPlan]
+              : parentFiltered;
+          }}
+          upgradeSubscriptionId={upgradeSubscriptionId as string}
+        />
+      )}
+    </>
   );
 }
 
@@ -82,28 +132,7 @@ SubscribePage.getInitialProps = async (ctx: NextPageContext) => {
     ),
   ]);
 
-  if (ctx.query.jwt) {
-    const data = await client.mutate({
-      mutation: LoginWithJwtDocument,
-      variables: {
-        jwt: ctx.query.jwt,
-      },
-    });
-
-    setCookie(
-      AuthTokenStorageKey,
-      JSON.stringify(
-        data.data.createSessionWithJWT as SessionWithTokenWithoutUser
-      ),
-      {
-        req: ctx.req,
-        res: ctx.res,
-        expires: new Date(data.data.createSessionWithJWT.expiresAt),
-        sameSite: 'strict',
-        httpOnly: !!publicRuntimeConfig.env.HTTP_ONLY_COOKIE,
-      }
-    );
-  }
+  await handleJwtLogin(ctx, client, !!publicRuntimeConfig.env.HTTP_ONLY_COOKIE);
 
   const sessionProps = await getSessionTokenProps(ctx);
 

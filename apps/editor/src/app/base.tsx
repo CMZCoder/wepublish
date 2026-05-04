@@ -22,10 +22,12 @@ import {
   MdDescription,
   MdEvent,
   MdEventAvailable,
+  MdExtension,
   MdFactCheck,
   MdFileCopy,
   MdGroup,
   MdGroups,
+  MdHub,
   MdLocationPin,
   MdLogout,
   MdMail,
@@ -37,6 +39,7 @@ import {
   MdPersonAddAlt1,
   MdPhoto,
   MdPieChartOutline,
+  MdPower,
   MdQueryStats,
   MdSell,
   MdSettings,
@@ -162,7 +165,7 @@ export function Base({ children }: BaseProps) {
 
   useEffect(() => {
     i18n.changeLanguage(uiLanguage);
-  }, [uiLanguage]);
+  }, [i18n, uiLanguage]);
 
   return (
     <Wrapper>
@@ -192,14 +195,37 @@ export function Base({ children }: BaseProps) {
               />
 
               <Navigation>
-                <Nav.Item
-                  as={NavLink}
-                  href="/dashboard"
+                <Nav.Menu
+                  eventKey={'dashboard'}
+                  title={t('navbar.dashboard')}
                   icon={<MdPieChartOutline />}
-                  active={path === 'dashboard' || path === ''}
                 >
-                  {t('navbar.dashboard')}
-                </Nav.Item>
+                  <Nav.Item
+                    as={NavLink}
+                    href="/dashboard"
+                    icon={<MdPieChartOutline />}
+                    active={path === 'dashboard' || path === ''}
+                  >
+                    {t('navbar.dashboard')}
+                  </Nav.Item>
+
+                  <PermissionControl
+                    qualifyingPermissions={[
+                      'CAN_CREATE_EXTERNAL_APP',
+                      'CAN_UPDATE_EXTERNAL_APP',
+                      'CAN_DELETE_EXTERNAL_APP',
+                    ]}
+                  >
+                    <Nav.Item
+                      as={NavLink}
+                      href="/dashboard/apps"
+                      icon={<MdExtension />}
+                      active={path === 'dashboard/apps'}
+                    >
+                      {t('navbar.apps')}
+                    </Nav.Item>
+                  </PermissionControl>
+                </Nav.Menu>
 
                 <PermissionControl
                   qualifyingPermissions={[
@@ -257,6 +283,15 @@ export function Base({ children }: BaseProps) {
                       </Nav.Item>
                     </PermissionControl>
 
+                    <Nav.Item
+                      as={NavLink}
+                      href="/network"
+                      icon={<MdHub />}
+                      active={path === 'network'}
+                    >
+                      {t('navbar.networkContent')}
+                    </Nav.Item>
+
                     <PermissionControl
                       qualifyingPermissions={[
                         'CAN_GET_TAGS',
@@ -283,9 +318,9 @@ export function Base({ children }: BaseProps) {
                     >
                       <Nav.Item
                         as={NavLink}
-                        href="/articles/paywall"
+                        href="/articles/paywalls"
                         icon={<MdPayment />}
-                        active={path === 'articles/paywall'}
+                        active={path === 'articles/paywalls'}
                       >
                         {t('paywall.navbar')}
                       </Nav.Item>
@@ -556,16 +591,53 @@ export function Base({ children }: BaseProps) {
                     'CAN_GET_IMAGE',
                     'CAN_CREATE_IMAGE',
                     'CAN_DELETE_IMAGE',
+                    'CAN_GET_DOCUMENTS',
+                    'CAN_GET_DOCUMENT',
+                    'CAN_CREATE_DOCUMENT',
+                    'CAN_DELETE_DOCUMENT',
                   ]}
                 >
-                  <Nav.Item
-                    as={NavLink}
-                    href="/images"
+                  <Nav.Menu
+                    eventKey={'media'}
+                    title={t('navbar.media')}
                     icon={<MdPhoto />}
-                    active={path === 'images'}
                   >
-                    {t('navbar.imageLibrary')}
-                  </Nav.Item>
+                    <PermissionControl
+                      qualifyingPermissions={[
+                        'CAN_GET_IMAGES',
+                        'CAN_GET_IMAGE',
+                        'CAN_CREATE_IMAGE',
+                        'CAN_DELETE_IMAGE',
+                      ]}
+                    >
+                      <Nav.Item
+                        as={NavLink}
+                        href="/images"
+                        icon={<MdPhoto />}
+                        active={path === 'images'}
+                      >
+                        {t('navbar.imageLibrary')}
+                      </Nav.Item>
+                    </PermissionControl>
+
+                    <PermissionControl
+                      qualifyingPermissions={[
+                        'CAN_GET_DOCUMENTS',
+                        'CAN_GET_DOCUMENT',
+                        'CAN_CREATE_DOCUMENT',
+                        'CAN_DELETE_DOCUMENT',
+                      ]}
+                    >
+                      <Nav.Item
+                        as={NavLink}
+                        href="/documents"
+                        icon={<MdDescription />}
+                        active={path === 'documents'}
+                      >
+                        {t('navbar.documentLibrary')}
+                      </Nav.Item>
+                    </PermissionControl>
+                  </Nav.Menu>
                 </PermissionControl>
 
                 <PermissionControl
@@ -861,6 +933,7 @@ export function Base({ children }: BaseProps) {
                     'CAN_GET_USER_ROLE',
                     'CAN_CREATE_USER_ROLE',
                     'CAN_DELETE_USER_ROLE',
+                    'CAN_GET_INTEGRATIONS',
                   ]}
                 >
                   <Nav.Menu
@@ -934,6 +1007,26 @@ export function Base({ children }: BaseProps) {
                         icon={<MdBadge />}
                       >
                         {t('navbar.userRoles')}
+                      </Nav.Item>
+                    </PermissionControl>
+
+                    {/* INTEGRATIONS */}
+                    <PermissionControl
+                      qualifyingPermissions={[
+                        'CAN_GET_AI_SETTINGS',
+                        'CAN_GET_CHALLENGE_PROVIDER_SETTINGS',
+                        'CAN_GET_PAYMENT_PROVIDER_SETTINGS',
+                        'CAN_GET_TRACKING_PIXEL_SETTINGS',
+                        'CAN_GET_MAIL_PROVIDER_SETTINGS',
+                      ]}
+                    >
+                      <Nav.Item
+                        as={NavLink}
+                        href="/integrations"
+                        active={path === 'integrations'}
+                        icon={<MdPower />}
+                      >
+                        {t('navbar.integrations')}
                       </Nav.Item>
                     </PermissionControl>
                   </Nav.Menu>

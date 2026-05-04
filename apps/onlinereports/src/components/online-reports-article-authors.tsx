@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Button, IconButton } from '@mui/material';
+import { Button, css, IconButton } from '@mui/material';
 import { ArticleDateWrapper } from '@wepublish/article/website';
 import { CommentListItemShareWrapper } from '@wepublish/comments/website';
 import { useCommentListQuery } from '@wepublish/website/api';
@@ -16,15 +16,22 @@ import {
   avatarImageStyles,
 } from './author-chip';
 
-export const ArticleAuthorsWrapper = styled('div')`
+export const ArticleAuthorsWrapper = styled('div', {
+  shouldForwardProp: prop => prop !== 'authorsLength',
+})<{ authorsLength: number }>`
   display: grid;
-  gap: ${({ theme }) => theme.spacing(1.5)};
   grid-template-areas:
     'images names'
     'images date';
   grid-template-columns: min-content auto;
   row-gap: 0;
   flex-grow: 1;
+
+  ${({ authorsLength, theme }) =>
+    authorsLength > 0 &&
+    css`
+      column-gap: ${theme.spacing(1.5)};
+    `}
 
   ${ArticleDateWrapper} {
     font-size: 14px;
@@ -47,13 +54,16 @@ const AuthorNames = styled('div')`
   font-size: 16px;
 
   ${AuthorChipName} {
-    white-space: pre;
+    line-height: 1.25rem;
+    &:has(+ ${AuthorChipName}) {
+      padding-right: ${({ theme }) => theme.spacing(0.5)};
+    }
 
     a {
       color: ${({ theme }) => theme.palette.text.primary};
       text-decoration: none;
       font-weight: 500;
-      white-space: pre;
+      white-space: break-spaces;
     }
   }
 `;
@@ -61,6 +71,7 @@ const AuthorNames = styled('div')`
 const MetaWrapper = styled('div')`
   display: flex;
   justify-items: stretch;
+
   @media screen and (max-width: 430px) {
     flex-wrap: wrap;
   }
@@ -105,9 +116,6 @@ export function OnlineReportsArticleAuthors({
 
   const authors =
     article?.latest.authors.filter(author => !author.hideOnArticle) || [];
-  if (!authors.length) {
-    return;
-  }
 
   const scrollToComments = () => {
     const el = document.getElementById('comments');
@@ -118,32 +126,36 @@ export function OnlineReportsArticleAuthors({
 
   return (
     <MetaWrapper>
-      <ArticleAuthorsWrapper>
-        <AuthorAvatars>
-          {authors?.map(
-            author =>
-              author.image && (
-                <AuthorChipImageWrapper key={author.id}>
-                  <Image
-                    key={author.id}
-                    image={author.image}
-                    square
-                    css={avatarImageStyles}
-                    maxWidth={200}
-                  />
-                </AuthorChipImageWrapper>
-              )
-          )}
-        </AuthorAvatars>
+      <ArticleAuthorsWrapper authorsLength={authors.length}>
+        {authors.length > 0 && (
+          <>
+            <AuthorAvatars>
+              {authors?.map(
+                author =>
+                  author.image && (
+                    <AuthorChipImageWrapper key={author.id}>
+                      <Image
+                        key={author.id}
+                        image={author.image}
+                        square
+                        css={avatarImageStyles}
+                        maxWidth={200}
+                      />
+                    </AuthorChipImageWrapper>
+                  )
+              )}
+            </AuthorAvatars>
 
-        <AuthorNames>
-          {authors?.map((author, i) => (
-            <AuthorChipName key={author.id}>
-              <Link href={author.url}>{author.name}</Link>
-              {i < authors.length - 1 && ', '}
-            </AuthorChipName>
-          ))}
-        </AuthorNames>
+            <AuthorNames>
+              {authors?.map((author, i) => (
+                <AuthorChipName key={author.id}>
+                  <Link href={author.url}>{author.name}</Link>
+                  {i < authors.length - 1 && ', '}
+                </AuthorChipName>
+              ))}
+            </AuthorNames>
+          </>
+        )}
 
         <div style={{ gridArea: 'date' }}>
           <ArticleDate article={article} />
@@ -153,13 +165,15 @@ export function OnlineReportsArticleAuthors({
       <CommentsShareBox>
         {!article?.disableComments && (
           <CommentListItemShareWrapper>
-            {data?.comments?.length ?
+            {data?.commentsForItem?.length ?
               <ShareButton
                 onClick={scrollToComments}
                 endIcon={<MdOutlineModeComment />}
                 size={'small'}
               >
-                {data?.comments?.length ? data.comments.length : ''}
+                {data?.commentsForItem?.length ?
+                  data.commentsForItem.length
+                : ''}
               </ShareButton>
             : <IconButton
                 onClick={scrollToComments}

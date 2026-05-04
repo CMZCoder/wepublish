@@ -1,11 +1,12 @@
 import { ApolloError } from '@apollo/client';
 import {
-  FullUserFragment,
+  TinyUserFragment,
   useDeleteUserMutation,
+  useResetUserTotpMutation,
   UserFilter,
   UserRole,
   UserSort,
-  useUserListQuery,
+  useTinyUserListQuery,
 } from '@wepublish/editor/api';
 import {
   createCheckedPermissionComponent,
@@ -28,7 +29,7 @@ import {
 } from '@wepublish/ui/editor';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MdAdd, MdDelete, MdPassword } from 'react-icons/md';
+import { MdAdd, MdDelete, MdLockReset, MdPassword } from 'react-icons/md';
 import { Link } from 'react-router-dom';
 import {
   Button,
@@ -63,20 +64,21 @@ function UserList() {
 
   const [isResetUserPasswordOpen, setIsResetUserPasswordOpen] = useState(false);
   const [isConfirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<FullUserFragment>();
+  const [isResetTotpDialogOpen, setIsResetTotpDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<TinyUserFragment>();
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [users, setUsers] = useState<FullUserFragment[]>([]);
+  const [users, setUsers] = useState<TinyUserFragment[]>([]);
 
   const {
     data,
     refetch,
     loading: isLoading,
     error: userListQueryError,
-  } = useUserListQuery({
+  } = useTinyUserListQuery({
     variables: {
       filter: filter || undefined,
       take: limit,
@@ -84,7 +86,6 @@ function UserList() {
       sort: mapColumFieldToGraphQLField(sortField),
       order: mapTableSortTypeToGraphQLSortOrder(sortOrder),
     },
-    fetchPolicy: 'network-only',
   });
 
   const updateFilter = (filter: UserFilter) => {
@@ -102,7 +103,9 @@ function UserList() {
     });
   }, [filter, page, limit, sortOrder, sortField, refetch]);
 
-  const [deleteUser, { loading: isDeleting }] = useDeleteUserMutation();
+  const [deleteUser, { loading: isDeleting }] = useDeleteUserMutation({});
+  const [resetUserTotp, { loading: isResettingTotp }] =
+    useResetUserTotpMutation();
 
   const { t } = useTranslation();
 
@@ -122,23 +125,22 @@ function UserList() {
   /**
    * UI helpers
    */
-  function getSubscriptionCellView(user: FullUserFragment) {
-    const subscriptions = user.subscriptions;
-    const totalSubscriptions = subscriptions?.length;
-    // one subscription
-    if (subscriptions?.length === 1) {
+  function getSubscriptionCellView(user: TinyUserFragment) {
+    if (user.subscriptionCount === 1) {
       return <>{t('userList.overview.oneSubscription')}</>;
     }
+
     // multiple subscriptions
-    if (subscriptions?.length) {
+    if (user.subscriptionCount) {
       return (
         <>
           {t('userList.overview.amountOfSubscriptions', {
-            amount: totalSubscriptions,
+            amount: user.subscriptionCount,
           })}
         </>
       );
     }
+
     // no subscription
     return <>{t('userList.overview.noSubscriptions')}</>;
   }
@@ -192,6 +194,39 @@ function UserList() {
     }
   };
 
+  const handleResetTotp = async () => {
+    if (!currentUser) return;
+
+    try {
+      await resetUserTotp({
+        variables: { userId: currentUser.id },
+      });
+      toaster.push(
+        <Message
+          type="success"
+          showIcon
+          closable
+          duration={2000}
+        >
+          {t('userList.overview.totpResetSuccess')}
+        </Message>
+      );
+      setIsResetTotpDialogOpen(false);
+      refetch();
+    } catch (e) {
+      toaster.push(
+        <Message
+          type="error"
+          showIcon
+          closable
+          duration={2000}
+        >
+          {t('userList.overview.totpResetError')}
+        </Message>
+      );
+    }
+  };
+
   return (
     <>
       <ListViewContainer>
@@ -239,7 +274,7 @@ function UserList() {
           >
             <HeaderCell>{t('userList.overview.createdAt')}</HeaderCell>
             <RCell dataKey="createdAt">
-              {({ createdAt }: RowDataType<FullUserFragment>) =>
+              {({ createdAt }: RowDataType<TinyUserFragment>) =>
                 t('userList.overview.createdAtDate', {
                   createdAtDate: new Date(createdAt),
                 })
@@ -254,7 +289,7 @@ function UserList() {
           >
             <HeaderCell>{t('userList.overview.modifiedAt')}</HeaderCell>
             <RCell dataKey="modifiedAt">
-              {({ modifiedAt }: RowDataType<FullUserFragment>) =>
+              {({ modifiedAt }: RowDataType<TinyUserFragment>) =>
                 t('userList.overview.modifiedAtDate', {
                   modifiedAtDate: new Date(modifiedAt),
                 })
@@ -269,7 +304,7 @@ function UserList() {
           >
             <HeaderCell>{t('userList.overview.firstName')}</HeaderCell>
             <RCell dataKey={'firstName'}>
-              {(rowData: RowDataType<FullUserFragment>) => (
+              {(rowData: RowDataType<TinyUserFragment>) => (
                 <Link to={`/users/edit/${rowData.id}`}>
                   {rowData.firstName || ''}
                 </Link>
@@ -284,7 +319,7 @@ function UserList() {
           >
             <HeaderCell>{t('userList.overview.name')}</HeaderCell>
             <RCell dataKey={'name'}>
-              {(rowData: RowDataType<FullUserFragment>) => (
+              {(rowData: RowDataType<TinyUserFragment>) => (
                 <Link to={`/users/edit/${rowData.id}`}>
                   {rowData.name || t('userList.overview.unknown')}
                 </Link>
@@ -306,7 +341,7 @@ function UserList() {
           >
             <HeaderCell>{t('userCreateOrEditView.userRoles')}</HeaderCell>
             <RCell dataKey="roles">
-              {(rowData: RowDataType<FullUserFragment>) =>
+              {(rowData: RowDataType<TinyUserFragment>) =>
                 rowData.roles?.map((r: UserRole) => r.name).join(', ')
               }
             </RCell>
@@ -319,21 +354,21 @@ function UserList() {
           >
             <HeaderCell>{t('userList.overview.subscriptions')}</HeaderCell>
             <RCell>
-              {(rowData: RowDataType<FullUserFragment>) => (
+              {(rowData: RowDataType<TinyUserFragment>) => (
                 <div>
-                  {getSubscriptionCellView(rowData as FullUserFragment)}
+                  {getSubscriptionCellView(rowData as TinyUserFragment)}
                 </div>
               )}
             </RCell>
           </Column>
           <Column
-            width={100}
+            width={140}
             align="center"
             fixed="right"
           >
             <HeaderCell>{t('userList.overview.action')}</HeaderCell>
             <PaddedCell>
-              {(rowData: RowDataType<FullUserFragment>) => (
+              {(rowData: RowDataType<TinyUserFragment>) => (
                 <>
                   <PermissionControl
                     qualifyingPermissions={['CAN_RESET_USER_PASSWORD']}
@@ -346,8 +381,26 @@ function UserList() {
                         size="sm"
                         icon={<MdPassword />}
                         onClick={e => {
-                          setCurrentUser(rowData as FullUserFragment);
+                          setCurrentUser(rowData as TinyUserFragment);
                           setIsResetUserPasswordOpen(true);
+                        }}
+                      />
+                    </IconButtonTooltip>
+                  </PermissionControl>
+                  <PermissionControl
+                    qualifyingPermissions={['CAN_RESET_USER_TOTP']}
+                  >
+                    <IconButtonTooltip
+                      caption={t('userList.overview.resetTotp')}
+                    >
+                      <IconButton
+                        circle
+                        size="sm"
+                        icon={<MdLockReset />}
+                        disabled={!(rowData as TinyUserFragment).totpEnabled}
+                        onClick={() => {
+                          setCurrentUser(rowData as TinyUserFragment);
+                          setIsResetTotpDialogOpen(true);
                         }}
                       />
                     </IconButtonTooltip>
@@ -364,7 +417,7 @@ function UserList() {
                         icon={<MdDelete />}
                         onClick={() => {
                           setConfirmationDialogOpen(true);
-                          setCurrentUser(rowData as FullUserFragment);
+                          setCurrentUser(rowData as TinyUserFragment);
                         }}
                       />
                     </IconButtonTooltip>
@@ -449,6 +502,41 @@ function UserList() {
           </Button>
           <Button
             onClick={() => setConfirmationDialogOpen(false)}
+            appearance="subtle"
+          >
+            {t('userCreateOrEditView.cancel')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* reset totp modal */}
+      <Modal
+        open={isResetTotpDialogOpen}
+        onClose={() => setIsResetTotpDialogOpen(false)}
+      >
+        <Modal.Header>
+          <Modal.Title>{t('userList.overview.resetTotpTitle')}</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p>
+            {t('userList.overview.resetTotpConfirmation', {
+              name: currentUser?.name || '',
+            })}
+          </p>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            appearance="primary"
+            color="orange"
+            disabled={isResettingTotp}
+            onClick={handleResetTotp}
+          >
+            {t('userCreateOrEditView.confirm')}
+          </Button>
+          <Button
+            onClick={() => setIsResetTotpDialogOpen(false)}
             appearance="subtle"
           >
             {t('userCreateOrEditView.cancel')}

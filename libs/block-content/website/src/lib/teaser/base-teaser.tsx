@@ -7,10 +7,11 @@ import {
   Image,
   useWebsiteBuilder,
 } from '@wepublish/website/builder';
-import { PropsWithChildren } from 'react';
+import { ComponentType, PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isImageBlock } from '../image/image-block';
 import { isTitleBlock } from '../title/title-block';
+import { differenceInDays } from 'date-fns';
 
 export const selectTeaserTitle = (teaser: TeaserType) => {
   switch (teaser.__typename) {
@@ -148,6 +149,22 @@ export const selectTeaserDate = (teaser: TeaserType) => {
 
     case 'CustomTeaser':
       return null;
+  }
+};
+
+export const selectTeaserLastPublishDate = (teaser: TeaserType) => {
+  switch (teaser.__typename) {
+    case 'PageTeaser': {
+      return teaser.page?.latest.publishedAt;
+    }
+
+    case 'ArticleTeaser': {
+      return teaser.article?.latest.publishedAt;
+    }
+
+    default: {
+      return selectTeaserDate(teaser);
+    }
   }
 };
 
@@ -353,6 +370,10 @@ export const TeaserTime = styled('time')`
   font-weight: 400;
 `;
 
+export const TeaserUpdateTime = styled('time')`
+  display: none;
+`;
+
 export const TeaserTags = styled('div')`
   display: none;
   flex-flow: row wrap;
@@ -402,11 +423,36 @@ const TeaserContent = ({
   );
 };
 
+type BaseTeaserComponents = {
+  PreTitle?: ComponentType<{ preTitle?: string | null }>;
+};
+
+export const BaseTeaserPreTitle: Exclude<
+  BaseTeaserComponents['PreTitle'],
+  undefined
+> = ({ preTitle }) => {
+  if (!preTitle) {
+    <TeaserPreTitleNoContent />;
+  }
+
+  return (
+    <TeaserPreTitleWrapper>
+      <Typography
+        variant="teaserPretitle"
+        component={TeaserPreTitle}
+      >
+        {preTitle}
+      </Typography>
+    </TeaserPreTitleWrapper>
+  );
+};
+
 export const BaseTeaser = ({
   teaser,
   alignment,
   className,
-}: BuilderTeaserProps) => {
+  PreTitle = BaseTeaserPreTitle,
+}: BuilderTeaserProps & BaseTeaserComponents) => {
   const title = teaser && selectTeaserTitle(teaser);
   const preTitle = teaser && selectTeaserPreTitle(teaser);
   const lead = teaser && selectTeaserLead(teaser);
@@ -415,9 +461,15 @@ export const BaseTeaser = ({
   const image = teaser && selectTeaserImage(teaser);
   const peerLogo = teaser && selectTeaserPeerImage(teaser);
   const publishDate = teaser && selectTeaserDate(teaser);
+  const updatedPublishDate = teaser && selectTeaserLastPublishDate(teaser);
   const authors = teaser && selectTeaserAuthors(teaser);
   const tags =
     teaser && selectTeaserTags(teaser).filter(tag => tag.tag !== preTitle);
+
+  const updated =
+    !!updatedPublishDate &&
+    !!publishDate &&
+    !!differenceInDays(new Date(updatedPublishDate), new Date(publishDate));
 
   const { t } = useTranslation();
   const { date } = useWebsiteBuilder();
@@ -442,17 +494,7 @@ export const BaseTeaser = ({
           </TeaserImageInnerWrapper>
         </TeaserImageWrapper>
 
-        {preTitle && (
-          <TeaserPreTitleWrapper>
-            <Typography
-              variant="teaserPretitle"
-              component={TeaserPreTitle}
-            >
-              {preTitle}
-            </Typography>
-          </TeaserPreTitleWrapper>
-        )}
-        {!preTitle && <TeaserPreTitleNoContent />}
+        <PreTitle preTitle={preTitle} />
 
         <Typography
           variant="teaserTitle"
@@ -491,6 +533,17 @@ export const BaseTeaser = ({
               dateTime={publishDate}
             >
               {date.format(new Date(publishDate), false)}
+
+              {updated && (
+                <TeaserUpdateTime
+                  suppressHydrationWarning
+                  dateTime={updatedPublishDate}
+                >
+                  {' '}
+                  (Aktualisiert am{' '}
+                  {date.format(new Date(updatedPublishDate!), false)})
+                </TeaserUpdateTime>
+              )}
             </TeaserTime>
           )}
         </Typography>

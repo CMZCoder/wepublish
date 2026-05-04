@@ -14,7 +14,7 @@ import {
   Drawer,
   Form as RForm,
   Message as RMessage,
-  Panel,
+  Panel as RPanel,
   Schema,
   toaster,
 } from 'rsuite';
@@ -52,6 +52,10 @@ const BoxWrapper = styled.div`
   margin-top: 4px;
 `;
 
+const Panel = styled(RPanel)`
+  overflow: initial;
+`;
+
 const Message = styled(RMessage)`
   margin-top: 5px;
 `;
@@ -80,9 +84,7 @@ function PeerInfoEditPanel({ onClose, onSave }: ImageEditPanelProps) {
     data,
     loading: isLoading,
     error: fetchError,
-  } = usePeerProfileQuery({
-    fetchPolicy: 'network-only',
-  });
+  } = usePeerProfileQuery({});
 
   const [updateSettings, { loading: isSaving, error: saveError }] =
     useUpdatePeerProfileMutation({
@@ -124,19 +126,18 @@ function PeerInfoEditPanel({ onClose, onSave }: ImageEditPanelProps) {
   async function handleSave() {
     await updateSettings({
       variables: {
-        input: {
-          name,
-          logoID: logoImage?.id,
-          squareLogoId: squareLogoImage?.id,
-          themeColor,
-          themeFontColor,
-          callToActionText: callToActionText!,
-          callToActionURL: callToActionTextURL,
-          callToActionImageID: callToActionImage?.id,
-          callToActionImageURL,
-        },
+        name,
+        logoID: logoImage!.id,
+        squareLogoId: squareLogoImage!.id,
+        themeColor,
+        themeFontColor,
+        callToActionText: callToActionText!,
+        callToActionURL: callToActionTextURL,
+        callToActionImageID: callToActionImage!.id,
+        callToActionImageURL,
       },
     });
+
     toaster.push(
       <Message
         type="success"

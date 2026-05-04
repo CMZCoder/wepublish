@@ -11,3 +11,18 @@ export * from './lib/subscription/subscription.model';
 export * from './lib/subscription/subscription.module';
 export * from './lib/subscription/has-subscription/has-subscription.model';
 export * from './lib/subscription/has-subscription/has-subscription.resolver';
+
+export * from './lib/upgrade-subscription/upgrade-subscription.model';
+export * from './lib/upgrade-subscription/upgrade-subscription.resolver';
+export * from './lib/upgrade-subscription/upgrade-subscription.module';
+
+export * from './lib/legacy/member-context';
+export * from './lib/legacy/member-context.service';
+export * from './lib/legacy/member-context.module';
+
+export * from './lib/invoice/invoice.model';
+export * from './lib/invoice/invoice.module';
+export * from './lib/invoice/has-invoice/has-invoice.model';
+
+export * from './lib/mailchimp-sync/mailchimp-sync.module';
+export * from './lib/mailchimp-sync/mailchimp-sync.service';

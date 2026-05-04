@@ -7,16 +7,17 @@ import {
 } from '@nestjs/common';
 import {
   GA_CLIENT_OPTIONS,
-  GoogleAnalyticsConfig,
   GoogleAnalyticsService,
 } from './google-analytics.service';
+import { GoogleAnalyticsDbConfig } from './google-analytics-db-config';
 import { PrismaModule } from '@wepublish/nest-modules';
 import { ArticleModule } from '@wepublish/article/api';
+import { KvTtlCacheModule } from '@wepublish/kv-ttl-cache/api';
 
 export type GoogleAnalyticsOptionsFactory = {
   createGoogleAnalyticsOptions():
-    | Promise<GoogleAnalyticsConfig>
-    | GoogleAnalyticsConfig;
+    | Promise<GoogleAnalyticsDbConfig>
+    | GoogleAnalyticsDbConfig;
 };
 
 export interface GoogleAnalyticsAsyncOptions
@@ -25,23 +26,25 @@ export interface GoogleAnalyticsAsyncOptions
   useClass?: Type<GoogleAnalyticsOptionsFactory>;
   useFactory?: (
     ...args: any[]
-  ) => Promise<GoogleAnalyticsConfig> | GoogleAnalyticsConfig;
+  ) => Promise<GoogleAnalyticsDbConfig> | GoogleAnalyticsDbConfig;
   inject?: any[];
 }
 
 @Module({
-  imports: [PrismaModule, ArticleModule],
+  imports: [PrismaModule, ArticleModule, KvTtlCacheModule],
   providers: [GoogleAnalyticsService],
   exports: [GoogleAnalyticsService],
 })
 export class GoogleAnalyticsModule {
-  public static register(config: GoogleAnalyticsConfig): DynamicModule {
+  public static register(
+    configProvider: GoogleAnalyticsDbConfig
+  ): DynamicModule {
     return {
       module: GoogleAnalyticsModule,
       providers: [
         {
           provide: GA_CLIENT_OPTIONS,
-          useValue: config,
+          useValue: configProvider,
         },
       ],
     };

@@ -1,10 +1,19 @@
+import styled from '@emotion/styled';
 import { ProfilePage } from '@wepublish/utils/website';
+
+import theme from '../../src/theme';
+
+const TsriProfilePage = styled(ProfilePage)`
+  &:is(SubscriptionsWrapper) {
+    padding-top: ${theme.spacing(2)};
+  }
+`;
 
 export default function Profile() {
   return (
-    <ProfilePage
-      mediaEmail="info@tsri.ch"
+    <TsriProfilePage
       fields={['firstName', 'address', 'password', 'image']}
+      className="tsri-profile-page"
     />
   );
 }

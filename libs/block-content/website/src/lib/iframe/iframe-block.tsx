@@ -6,7 +6,7 @@ import {
 import { BuilderIFrameBlockProps } from '@wepublish/website/builder';
 import { css } from '@emotion/react';
 import { useMemo } from 'react';
-import IframeResizer from 'iframe-resizer-react';
+import IframeResizer from '@iframe-resizer/react';
 
 export const isIFrameBlock = (
   block: Pick<BlockContent, '__typename'>
@@ -38,6 +38,7 @@ export function IFrameBlock({
   return url ?
       <IFrameBlockWrapper className={className}>
         <IFrameBlockIframe
+          license="GPLv3"
           css={styleCustomCss}
           src={url}
           title={title ?? undefined}

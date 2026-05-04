@@ -1,11 +1,10 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "views"]
+  previewFeatures = ["views"]
 }
 
 datasource db {
-  provider = "postgres"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 model MetadataProperty {
@@ -28,6 +27,10 @@ model MetadataProperty {
   User   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String?
 
+  @@index([articleRevisionId])
+  @@index([pageRevisionId])
+  @@index([subscriptionId])
+  @@index([userId])
   @@map("properties")
 }
 
@@ -61,7 +64,7 @@ model ArticleRevision {
   article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   userId                   String?
-  user                     User?                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                     User?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
   ArticleRevisionPublished ArticleRevisionPublished[]
   ArticleRevisionPending   ArticleRevisionPending[]
   ArticleRevisionDraft     ArticleRevisionDraft[]
@@ -134,7 +137,7 @@ model Article {
   disableComments Boolean @default(false)
   likes           Int     @default(0)
 
-  peer          Peer?   @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peer          Peer?   @relation(fields: [peerId], references: [id], onDelete: Restrict)
   peerId        String?
   peerArticleId String?
 
@@ -152,6 +155,8 @@ model Article {
   @@index([createdAt])
   @@index([modifiedAt])
   @@index([publishedAt])
+  @@index([slug])
+  @@index([hidden, publishedAt(sort: Desc)])
   @@map("articles")
 }
 
@@ -172,6 +177,7 @@ model ArticleTrackingPixels {
   pixelUid String? @unique
   error    String?
 
+  @@index([articleId])
   @@map("articles.tracking-pixels")
 }
 
@@ -196,6 +202,7 @@ model TaggedArticles {
   modifiedAt DateTime @updatedAt
 
   @@id([articleId, tagId])
+  @@index([tagId])
   @@map("articles.tagged-articles")
 }
 
@@ -229,7 +236,7 @@ model Author {
   articlesAsAuthor            ArticleRevisionAuthor[]
   articlesAsSocialMediaAuthor ArticleRevisionSocialMediaAuthor[]
 
-  peer   Peer?   @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peer   Peer?   @relation(fields: [peerId], references: [id], onDelete: Restrict)
   peerId String?
 
   tags TaggedAuthors[]
@@ -296,7 +303,7 @@ model Image {
   pageRevisionSocialMediaImages PageRevision[] @relation("pageRevisionSocialMediaImage")
   pageRevisionImages            PageRevision[] @relation("pageRevisionImage")
 
-  peer   Peer?   @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peer   Peer?   @relation(fields: [peerId], references: [id], onDelete: Restrict)
   peerId String?
 
   users          User[]
@@ -312,6 +319,23 @@ model Image {
   @@index([title])
   @@index([tags])
   @@map("images")
+}
+
+model Document {
+  id          String   @id
+  createdAt   DateTime @default(now())
+  modifiedAt  DateTime @updatedAt
+  filename    String?
+  title       String?
+  description String?
+  mimeType    String
+  fileSize    Int
+  extension   String
+
+  @@index([createdAt])
+  @@index([modifiedAt])
+  @@index([title])
+  @@map("documents")
 }
 
 enum CommentItemType {
@@ -434,7 +458,7 @@ model CommentRating {
   modifiedAt DateTime @updatedAt
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   answerId String
   answer   CommentRatingSystemAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
@@ -503,6 +527,7 @@ model Invoice {
   subscriptionPeriods SubscriptionPeriod[]
 
   @@index([mail])
+  @@index([subscriptionID])
   @@map("invoices")
 }
 
@@ -580,7 +605,7 @@ model MemberPlan {
   shortDescription               Json?
   slateShortDescription          Json?
   description                    Json?
-  slateDescription               Json
+  slateDescription               Json?
   active                         Boolean
   currency                       Currency
   amountPerMonthMin              Float
@@ -675,7 +700,7 @@ model PageRevision {
   page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   userId                 String?
-  user                   User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                   User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
   PagesRevisionPublished PagesRevisionPublished[]
   PagesRevisionPending   PagesRevisionPending[]
   PagesRevisionDraft     PagesRevisionDraft[]
@@ -809,7 +834,7 @@ model PeerProfile {
   themeFontColor        String
   callToActionURL       String
   callToActionText      Json?
-  slateCallToActionText Json
+  slateCallToActionText Json?
   callToActionImageURL  String?
   callToActionImageID   String?
 
@@ -941,6 +966,7 @@ model Subscription {
 
   invoices Invoice[]
 
+  @@index([userID])
   @@map("subscriptions")
 }
 
@@ -948,12 +974,14 @@ model UserAddress {
   createdAt  DateTime @default(now())
   modifiedAt DateTime @updatedAt
 
-  company        String?
-  streetAddress  String?
-  streetAddress2 String?
-  zipCode        String?
-  city           String?
-  country        String?
+  company              String?
+  streetAddress        String?
+  streetAddressNumber  String?
+  streetAddress2       String?
+  streetAddress2Number String?
+  zipCode              String?
+  city                 String?
+  country              String?
 
   userId String @unique
   User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -982,6 +1010,8 @@ model User {
   birthday        DateTime? @db.Date
   email           String    @unique
   emailVerifiedAt DateTime?
+  pendingEmail    String?
+  pendingEmailAt  DateTime?
   name            String
   firstName       String?
   flair           String?
@@ -989,6 +1019,9 @@ model User {
   active          Boolean
   lastLogin       DateTime?
   roleIDs         String[]
+  totpSecret      String?
+  totpEnabled     Boolean   @default(false)
+  totpExempt      Boolean   @default(false)
   userImageID     String?
   userImage       Image?    @relation(fields: [userImageID], references: [id])
   note            String?
@@ -997,15 +1030,16 @@ model User {
   properties               MetadataProperty[]
   paymentProviderCustomers PaymentProviderCustomer[]
 
-  comments         Comment[]
-  sessions         Session[]
-  subscriptions    Subscription[]
-  commentRatings   CommentRating[]
-  pollVotes        PollVote[]
-  mailSent         MailLog[]
-  consents         UserConsent[]
-  articleRevisions ArticleRevision[]
-  pageRevisions    PageRevision[]
+  comments            Comment[]
+  sessions            Session[]
+  subscriptions       Subscription[]
+  commentRatings      CommentRating[]
+  pollVotes           PollVote[]
+  mailSent            MailLog[]
+  consents            UserConsent[]
+  articleRevisions    ArticleRevision[]
+  pageRevisions       PageRevision[]
+  mailchimpSyncErrors MailchimpSyncError[]
 
   @@map("users")
 }
@@ -1028,8 +1062,8 @@ model Setting {
   createdAt          DateTime @default(now())
   modifiedAt         DateTime @updatedAt
   name               String   @unique
-  value              Json
-  settingRestriction Json
+  value              Json?
+  settingRestriction Json?
 
   @@map("settings")
 }
@@ -1052,8 +1086,9 @@ model Tag {
   description      Json?
   slateDescription Json?
   main             Boolean @default(false)
+  color            String?
 
-  peer   Peer?   @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peer   Peer?   @relation(fields: [peerId], references: [id], onDelete: Restrict)
   peerId String?
 
   comments TaggedComments[]
@@ -1098,6 +1133,7 @@ model PollAnswer {
   votes         PollVote[]
   externalVotes PollExternalVote[]
 
+  @@index([pollId])
   @@map("polls.answers")
 }
 
@@ -1107,7 +1143,7 @@ model PollVote {
   modifiedAt DateTime @updatedAt
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   answerId String
   answer   PollAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
@@ -1121,6 +1157,7 @@ model PollVote {
   disabled    Boolean @default(false)
 
   @@unique([pollId, userId])
+  @@index([answerId])
   @@map("polls.votes")
 }
 
@@ -1235,6 +1272,7 @@ enum UserEvent {
   PASSWORD_RESET
   LOGIN_LINK
   TEST_MAIL
+  EMAIL_CHANGE
 }
 
 model UserFlowMail {
@@ -1349,6 +1387,7 @@ enum BlockType {
   Poll           @map("poll")
   Comment        @map("comment")
   Event          @map("event")
+  FlexBlock      @map("flexBlock")
 }
 
 model BlockStyle {
@@ -1389,11 +1428,12 @@ model Banner {
 }
 
 enum LoginStatus {
-  UNSUBSCRIBED @map("unsubscribed")
-  SUBSCRIBED   @map("subscribed")
-  LOGGED_IN    @map("logged_in")
-  LOGGED_OUT   @map("logged_out")
-  ALL          @map("all")
+  PAYWALL_BYPASSED @map("paywall_bypassed")
+  UNSUBSCRIBED     @map("unsubscribed")
+  SUBSCRIBED       @map("subscribed")
+  LOGGED_IN        @map("logged_in")
+  LOGGED_OUT       @map("logged_out")
+  ALL              @map("all")
 }
 
 model BannerAction {
@@ -1458,13 +1498,23 @@ model Paywall {
   createdAt  DateTime @default(now())
   modifiedAt DateTime @updatedAt
 
-  name                       String? @unique
-  description                Json?
-  slateDescription           Json?
-  circumventDescription      Json?
-  slateCircumventDescription Json?
-  anyMemberPlan              Boolean @default(false)
-  active                     Boolean @default(true)
+  name String? @unique
+
+  description                       Json?
+  slateDescription                  Json?
+  upgradeDescription                Json?
+  slateUpgradeDescription           Json?
+  circumventDescription             Json?
+  slateCircumventDescription        Json?
+  upgradeCircumventDescription      Json?
+  slateUpgradeCircumventDescription Json?
+
+  anyMemberPlan           Boolean @default(false)
+  active                  Boolean @default(true)
+  alternativeSubscribeUrl String?
+
+  hideContentAfter Int     @default(3)
+  fadeout          Boolean @default(true)
 
   memberPlans PaywallMemberplan[]
   articles    Article[]
@@ -1492,10 +1542,364 @@ model PaywallBypass {
   createdAt  DateTime @default(now())
   modifiedAt DateTime @updatedAt
 
-  token String @unique
+  token String
 
   paywall   Paywall @relation(fields: [paywallId], references: [id], onDelete: Cascade)
   paywallId String  @db.Uuid
 
+  @@unique([paywallId, token])
   @@map("paywall_bypasses")
+}
+
+enum MailProviderType {
+  MAILGUN   @map("mailgun")
+  MAILCHIMP @map("mailchimp")
+  SLACK     @map("slack")
+}
+
+model SettingMailProvider {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  modifiedAt   DateTime @updatedAt
+  lastLoadedAt DateTime @default(now())
+
+  type                  MailProviderType
+  name                  String?
+  fromAddress           String?
+  replyToAddress        String?
+  webhookEndpointSecret String?
+  apiKey                String?
+  mailgun_mailDomain    String?
+  mailgun_baseDomain    String?
+  mailchimp_baseURL     String?
+  slack_webhookURL      String?
+
+  @@map("settings.mailprovider")
+}
+
+model SettingTrackingPixel {
+  id                                     String                    @id
+  createdAt                              DateTime                  @default(now())
+  modifiedAt                             DateTime                  @updatedAt
+  lastLoadedAt                           DateTime                  @default(now())
+  type                                   TrackingPixelProviderType
+  name                                   String?
+  prolitteris_memberNr                   String?
+  prolitteris_username                   String?
+  prolitteris_password                   String?
+  prolitteris_publisherInternalKeyDomain String?
+  prolitteris_usePublisherInternalKey    Boolean?
+  prolitteris_onlyPaidContentAccess      Boolean?
+
+  @@map("settings.trackingpixel")
+}
+
+enum PaymentProviderType {
+  STRIPE_CHECKOUT      @map("stripe-checkout")
+  STRIPE               @map("stripe")
+  PAYREXX              @map("payrexx")
+  PAYREXX_SUBSCRIPTION @map("payrexx-subscription")
+  BEXIO                @map("bexio")
+  MOLLIE               @map("mollie")
+  NO_CHARGE            @map("no-charge")
+}
+
+enum PayrexxPSP {
+  PAYREXX_PAY
+  PAYREXX_PAY_PLUS
+  POSTFINANCE_ECOMMERCE
+  PAYPAL
+  STRIPE
+  OGONE_BASIC
+  GIROPAY
+  OGONE_ALIAS_GATEWAY
+  CONCARDIS_PAY_ENGINE
+  CONCARDIS_BASIC
+  COINBASE
+  POSTFINANCE_ALIAS_GATEWAY
+  BRAINTREE
+  KLARNA
+  INVOICE
+  TWINT
+  SAFERPAY
+  DATATRANS
+  CCAVENUE
+  VIVEUM
+  REKA
+  SWISSBILLING
+  PAYONE
+  PAYREXX_PAYMENTS_BY_STRIPE
+  VORKASSE
+  CONCARDIS_PAYENGINE
+  WIRPAY
+  MOLLIE
+  SKRILL
+  VRPAY
+  WORLDPAY
+  PAYSAFECASH
+  UTRUST
+  POINTS_PAY
+  AMAZON_PAY
+  CLEARHAUS_ACQUIRING
+  POSTFINANCE_CHECKOUT
+  BARZAHLEN_VIACASH
+  POWERPAY
+  CEMBRAPAY
+}
+
+enum PayrexxPM {
+  ALIPAY
+  AMAZON_PAY
+  AMERICAN_EXPRESS
+  APPLE_PAY
+  BANCONTACT
+  BANK_TRANSFER
+  CARTES_BANCAIRES
+  CRYPTO
+  DINERS_CLUB
+  DISCOVER
+  EPS
+  GIROPAY
+  GOOGLE_PAY
+  IDEAL
+  INVOICE
+  JCB
+  MAESTRO
+  MASTERCARD
+  PAY_BY_BANK
+  PAYPAL
+  POST_FINANCE_PAY
+  POWERPAY
+  PREPAYMENT
+  SAMSUNG_PAY
+  SEPA_DIRECT_DEBIT
+  KLARNA
+  TWINT
+  UNIONPAY
+  VERD_CASH
+  VISA
+  V_PAY
+  WECHAT_PAY
+  SWISSCOM_PAY
+}
+
+enum StripePaymentMethod {
+  ACSS_DEBIT
+  AFTERPAY_CLEARPAY
+  ALIPAY
+  AU_BECS_DEBIT
+  BACS_DEBIT
+  BANCONTACT
+  BOLETO
+  CARD
+  EPS
+  FPX
+  GIROPAY
+  GRABPAY
+  IDEAL
+  KLARNA
+  KONBINI
+  OXXO
+  P24
+  PAYNOW
+  SEPA_DEBIT
+  SOFORT
+  US_BANK_ACCOUNT
+  WECHAT_PAY
+}
+
+enum MolliePaymentMethod {
+  ALMA
+  APPLEPAY
+  BACS
+  BANCOMATPAY
+  BANCONTACT
+  BANKTRANSFER
+  BELFIUS
+  BILLIE
+  BLIK
+  CREDITCARD
+  DIRECTDEBIT
+  EPS
+  GIFTCARD
+  IDEAL
+  IN3
+  KBC
+  KLARNA
+  KLARNAPAYLATER
+  KLARNAPAYNOW
+  KLARNASLICEIT
+  MYBANK
+  PAYPAL
+  PAYSAFECARD
+  PRZELEWY24
+  RIVERTY
+  SATISPAY
+  TRUSTLY
+  TWINT
+  VOUCHER
+}
+
+model SettingPaymentProvider {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  modifiedAt   DateTime @updatedAt
+  lastLoadedAt DateTime @default(now())
+
+  type                  PaymentProviderType
+  name                  String?
+  offSessionPayments    Boolean?
+  webhookEndpointSecret String? // Payrexx webhookApiKey
+  apiKey                String? // Stripe secretKey & payrex instance_api_secret
+
+  stripe_methods StripePaymentMethod[]
+
+  payrexx_instancename String?
+  payrexx_psp          PayrexxPSP[]
+  payrexx_pm           PayrexxPM[]
+  payrexx_vatrate      Decimal?     @db.Decimal(5, 4)
+
+  bexio_userId                              Int?
+  bexio_countryId                           Int?
+  bexio_invoiceTemplateNewMembership        String?
+  bexio_invoiceTemplateRenewalMembership    String?
+  bexio_unitId                              Int?
+  bexio_taxId                               Int?
+  bexio_accountId                           Int?
+  bexio_invoiceTitleNewMembership           String?
+  bexio_invoiceTitleRenewalMembership       String?
+  bexio_invoiceMailSubjectNewMembership     String?
+  bexio_invoiceMailBodyNewMembership        String?
+  bexio_invoiceMailSubjectRenewalMembership String?
+  bexio_invoiceMailBodyRenewalMembership    String?
+  bexio_markInvoiceAsOpen                   Boolean?
+
+  mollie_apiBaseUrl String?
+  mollie_methods    MolliePaymentMethod[]
+
+  @@map("settings.paymentprovider")
+}
+
+enum ChallengeProviderType {
+  TURNSTILE @map("turnstile")
+  HCAPTCHA  @map("hcaptcha")
+}
+
+model SettingChallengeProvider {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  modifiedAt   DateTime @updatedAt
+  lastLoadedAt DateTime @default(now())
+  name         String?
+
+  type    ChallengeProviderType
+  secret  String?
+  siteKey String?
+
+  @@map("settings.challengeprovider")
+}
+
+enum AIProviderType {
+  V0 @map("v0")
+}
+
+model SettingAIProvider {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  modifiedAt   DateTime @updatedAt
+  lastLoadedAt DateTime @default(now())
+
+  type         AIProviderType
+  name         String?
+  apiKey       String?
+  systemPrompt String?
+
+  @@map("settings.aiprovider")
+}
+
+enum ExternalAppsTarget {
+  BLANK  @map("blank")
+  IFRAME @map("iframe")
+}
+
+model ExternalApps {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  name        String
+  description String?
+  url         String
+  target      ExternalAppsTarget
+  icon        String?
+
+  @@map("apps.external")
+}
+
+enum AnalyticsProviderType {
+  GOOGLE @map("google")
+}
+
+model SettingAnalyticsProvider {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  modifiedAt   DateTime @updatedAt
+  lastLoadedAt DateTime @default(now())
+
+  type          AnalyticsProviderType
+  name          String?
+  credentials   String?
+  property      String?
+  articlePrefix String?
+
+  @@map("settings.analyticsProvider")
+}
+
+enum SyncProviderType {
+  MAILCHIMP @map("mailchimp")
+}
+
+model SettingSyncProvider {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  modifiedAt   DateTime @updatedAt
+  lastLoadedAt DateTime @default(now())
+
+  type    SyncProviderType
+  name    String?
+  enabled Boolean          @default(false)
+
+  // Mailchimp-specific configuration
+  mailchimp_apiKey                  String?
+  mailchimp_listId                  String?
+  mailchimp_mergeFieldMappings      Json    @default("[]")
+  mailchimp_interestGroupMappings   Json    @default("[]")
+  mailchimp_defaultInterestGroupIds Json    @default("[]")
+  mailchimp_extensions              Json    @default("{}")
+
+  // Last sync execution info
+  lastSyncAt    DateTime?
+  lastSyncError String?
+
+  mailchimpSyncErrors MailchimpSyncError[]
+
+  @@map("settings.syncprovider")
+}
+
+model MailchimpSyncError {
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  userId         String
+  syncProviderId String
+  email          String
+  errorMessage   String
+  statusCode     Int?
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syncProvider SettingSyncProvider @relation(fields: [syncProviderId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, syncProviderId])
+  @@map("mailchimp_sync_errors")
 }

@@ -2,6 +2,7 @@ import { useUser } from '@wepublish/authentication/website';
 import {
   UpdatePasswordMutationVariables,
   UpdateUserMutationVariables,
+  useRequestEmailChangeMutation,
   useUpdatePasswordMutation,
   useUpdateUserMutation,
   useUploadImageMutation,
@@ -16,51 +17,42 @@ import { ChangeEvent, useCallback } from 'react';
 
 export type PersonalDataFormContainerProps<
   T extends BuilderPersonalDataFormFields = BuilderPersonalDataFormFields,
-> = {
-  mediaEmail?: string;
-} & BuilderContainerProps &
+> = BuilderContainerProps &
   Pick<BuilderPersonalDataFormProps<T>, 'fields' | 'schema'>;
 
 export function PersonalDataFormContainer<
   T extends BuilderPersonalDataFormFields,
->({
-  className,
-  mediaEmail,
-  schema,
-  fields,
-}: PersonalDataFormContainerProps<T>) {
+>({ className, schema, fields }: PersonalDataFormContainerProps<T>) {
   const { PersonalDataForm } = useWebsiteBuilder();
   const { user } = useUser();
 
   const [uploadImage] = useUploadImageMutation();
   const [updatePassword] = useUpdatePasswordMutation();
   const [updateUser] = useUpdateUserMutation();
+  const [requestEmailChange] = useRequestEmailChangeMutation();
 
   const handleOnImageUpload = useCallback(
     async (input: ChangeEvent<HTMLInputElement> | null) => {
-      await uploadImage({
-        variables: {
-          uploadImageInput:
-            input ? { file: input.target?.files![0] as File } : null,
-        },
-      });
+      if (input) {
+        await uploadImage({
+          variables: { file: input.target?.files![0] as File },
+        });
+      }
     },
     [uploadImage]
   );
 
   const handleOnUpdate = useCallback(
     async (
-      variables: UpdateUserMutationVariables['input'] &
+      variables: UpdateUserMutationVariables &
         Partial<UpdatePasswordMutationVariables>
     ) => {
       const { password, passwordRepeated, ...userInput } = variables;
       const updates = [
         updateUser({
-          variables: {
-            input: userInput,
-          },
+          variables: userInput,
         }),
-      ];
+      ] as Promise<unknown>[];
 
       if (password && passwordRepeated) {
         updates.push(
@@ -78,6 +70,13 @@ export function PersonalDataFormContainer<
     [updatePassword, updateUser]
   );
 
+  const handleRequestEmailChange = useCallback(
+    async (newEmail: string) => {
+      await requestEmailChange({ variables: { newEmail } });
+    },
+    [requestEmailChange]
+  );
+
   if (!user) {
     return null;
   }
@@ -88,7 +87,7 @@ export function PersonalDataFormContainer<
       user={user}
       onImageUpload={handleOnImageUpload}
       onUpdate={handleOnUpdate}
-      mediaEmail={mediaEmail}
+      onRequestEmailChange={handleRequestEmailChange}
       fields={fields}
       schema={schema}
     />

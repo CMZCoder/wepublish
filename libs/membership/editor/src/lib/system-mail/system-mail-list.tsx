@@ -13,13 +13,11 @@ import {
   UserEvent,
   useTestSystemMailMutation,
   useUpdateSystemMailMutation,
-  getApiClientV2,
-} from '@wepublish/editor/api-v2';
-import { useMemo } from 'react';
+} from '@wepublish/editor/api';
 import { useTranslation } from 'react-i18next';
 import { Button, SelectPicker, Stack, Tag } from 'rsuite';
 import { TypeAttributes } from 'rsuite/esm/@types/common';
-import { MdLink, MdLogin, MdPassword } from 'react-icons/md';
+import { MdEmail, MdLink, MdLogin, MdPassword } from 'react-icons/md';
 import { RiTestTubeLine } from 'react-icons/ri';
 import { DEFAULT_MUTATION_OPTIONS, DEFAULT_QUERY_OPTIONS } from '../common';
 import {
@@ -37,6 +35,7 @@ const userEventColors: UserEventColorMap = {
   [UserEvent.PasswordReset]: 'blue',
   [UserEvent.LoginLink]: 'yellow',
   [UserEvent.TestMail]: 'violet',
+  [UserEvent.EmailChange]: 'orange',
 };
 
 type UserEventIconMap = Record<
@@ -48,23 +47,19 @@ const userEventIcons: UserEventIconMap = {
   [UserEvent.PasswordReset]: <MdPassword size={16} />,
   [UserEvent.LoginLink]: <MdLink size={16} />,
   [UserEvent.TestMail]: <RiTestTubeLine size={16} />,
+  [UserEvent.EmailChange]: <MdEmail size={16} />,
 };
 
 function SystemMailList() {
   const { t } = useTranslation();
 
-  const client = useMemo(() => getApiClientV2(), []);
-  const { data: systemMails } = useSystemMailsQuery(
-    DEFAULT_QUERY_OPTIONS(client)
-  );
-  const { data: mailTemplates } = useMailTemplateQuery(
-    DEFAULT_QUERY_OPTIONS(client)
-  );
+  const { data: systemMails } = useSystemMailsQuery(DEFAULT_QUERY_OPTIONS());
+  const { data: mailTemplates } = useMailTemplateQuery(DEFAULT_QUERY_OPTIONS());
   const [updateSystemMail] = useUpdateSystemMailMutation(
-    DEFAULT_MUTATION_OPTIONS(client, t)
+    DEFAULT_MUTATION_OPTIONS(t)
   );
   const [testSystemMail] = useTestSystemMailMutation(
-    DEFAULT_MUTATION_OPTIONS(client, t)
+    DEFAULT_MUTATION_OPTIONS(t)
   );
 
   return (

@@ -12,7 +12,6 @@ import {
 import { SubscribeContainer } from './subscribe-container';
 import * as registrationFormStories from './subscribe.stories';
 import { ApolloError } from '@apollo/client';
-import { waitFor, within } from '@storybook/test';
 import { useUser } from '@wepublish/authentication/website';
 import {
   mockAvailablePaymentMethod,
@@ -81,11 +80,16 @@ const subscription = mockSubscription({
   monthlyAmount: memberPlan.amountPerMonthMin,
   paymentPeriodicity: PaymentPeriodicity.Yearly,
   canExtend: true,
+  deactivation: null,
+  extendable: true,
+  externalReward: 'https://example.com/external-reward-mock-url',
 });
 
 const invoice = mockInvoice({
   total: 5000,
   subscription,
+  canceledAt: null,
+  description: 'Mock Invoice',
 });
 
 const registerVariables = {
@@ -125,6 +129,8 @@ export const Default: StoryObj<typeof SubscribeContainer> = {
               memberPlans: {
                 nodes: [memberPlan, memberPlan2, memberPlan3],
                 pageInfo: {
+                  startCursor: null,
+                  endCursor: null,
                   hasNextPage: false,
                   hasPreviousPage: false,
                   __typename: 'PageInfo',
@@ -147,7 +153,7 @@ export const Default: StoryObj<typeof SubscribeContainer> = {
             query: SubscriptionsDocument,
           },
           result: {
-            data: { subscriptions: [subscription] },
+            data: { userSubscriptions: [subscription] },
           },
         },
         {
@@ -225,9 +231,6 @@ export const Filled: StoryObj<typeof SubscribeContainer> = {
     );
   },
   play: async ctx => {
-    const canvas = within(ctx.canvasElement);
-    await waitFor(() => canvas.getByLabelText('Captcha'));
-
     // false positive due to the `as any`
     // eslint-disable-next-line storybook/context-in-play-function
     await registrationFormStories.Filled.play?.(ctx as any);
@@ -262,6 +265,8 @@ export const WithChallengeError: StoryObj<typeof SubscribeContainer> = {
               memberPlans: {
                 nodes: [memberPlan, memberPlan2, memberPlan3],
                 pageInfo: {
+                  startCursor: null,
+                  endCursor: null,
                   hasNextPage: false,
                   hasPreviousPage: false,
                   __typename: 'PageInfo',

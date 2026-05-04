@@ -8,15 +8,7 @@
     "jsxImportSource": "@emotion/react",
     "moduleResolution": "bundler"
   },
-  "files": [],
+  "files": ["src/emotion.d.ts"],
   "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ],
   "extends": "../../tsconfig.base.json"
 }

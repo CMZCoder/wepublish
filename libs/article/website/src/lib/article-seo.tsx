@@ -101,6 +101,7 @@ export const getArticleSEO = (article: Article) => {
       identifier: article.slug,
       url,
     },
+    noIndex: !!article.hidden,
   };
 };
 
@@ -113,11 +114,13 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
   return (
     <Head>
       <title key="title">{title}</title>
+
       <meta
         key={'og:type'}
         property="og:type"
         content={seo.type}
       />
+
       {seo.socialMediaTitle && (
         <meta
           key={'og:title'}
@@ -125,6 +128,7 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
           content={seo.socialMediaTitle}
         />
       )}
+
       {seo.socialMediaDescription && (
         <meta
           key={'og:description'}
@@ -132,6 +136,7 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
           content={seo.socialMediaDescription}
         />
       )}
+
       {seo.description && (
         <meta
           key={'description'}
@@ -139,16 +144,19 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
           content={seo.description}
         />
       )}
+
       <meta
         key={'og:url'}
         property="og:url"
         content={seo.url}
       />
+
       <link
         key={'canonical'}
         rel="canonical"
         href={seo.url}
       />
+
       {seo.image && (
         <>
           <meta
@@ -218,11 +226,13 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
           />
         </>
       )}
+
       <meta
         key={'twitter:card'}
         name="twitter:card"
         content="summary_large_image"
       />
+
       <meta
         key={'max-image-preview'}
         name="robots"
@@ -268,6 +278,7 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
           />
         </Fragment>
       ))}
+
       {seo.tags.map(tag => (
         <meta
           key={`og:article:tag:${tag.id}`}
@@ -275,6 +286,15 @@ export const ArticleSEO = ({ article }: BuilderArticleSEOProps) => {
           content={tag.tag ?? ''}
         />
       ))}
+
+      {seo.noIndex && (
+        <meta
+          key={`robots`}
+          name="robots"
+          content="noindex"
+        />
+      )}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.schema) }}
