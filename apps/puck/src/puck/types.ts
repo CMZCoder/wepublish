@@ -20,12 +20,14 @@ import { GridProps } from './components/layout/grid';
 import { SpaceProps } from './components/layout/space';
 import { WithColumnSpan } from './components/layout/with-column-span';
 import { SubscribeConfigProps } from './components/subscribe.config';
+import { AlignmentField, AlignmentValue } from './plugins/alignment';
 import { BorderField } from './plugins/border';
 import { ColumnsField } from './plugins/columns';
 import { DatasourceField } from './plugins/datasource';
 import { PaddingField } from './plugins/padding';
 import { SEOField, SEOValue } from './plugins/seo';
 import { WithDataSource } from './components/with-datasource';
+import { ButtonConfig } from './components/content/button.config';
 
 export type RootProps = {
   showNavigation: boolean;
@@ -52,6 +54,7 @@ type BaseComponents = {
   Facebook: BuilderFacebookPostBlockProps;
   Instagram: BuilderInstagramPostBlockProps;
   Subscribe: SubscribeConfigProps;
+  Button: { text: string; alignment?: AlignmentValue };
 };
 
 export type Components = {
@@ -64,6 +67,7 @@ export type UserFields = {
   padding: PaddingField;
   border: BorderField;
   columns: ColumnsField;
+  alignment: AlignmentField;
 };
 
 export type UserConfig = Config<{

@@ -3,6 +3,7 @@ import '@puckeditor/core/puck.css';
 import { Data, Puck } from '@puckeditor/core';
 
 import { config } from '../src/puck/config';
+import { alignmentPlugin } from '../src/puck/plugins/alignment';
 import { borderPlugin } from '../src/puck/plugins/border';
 import { columnsPlugin } from '../src/puck/plugins/columns';
 import { datasourcePlugin } from '../src/puck/plugins/datasource';
@@ -30,6 +31,7 @@ export default function Index() {
         seoPlugin,
         paddingPlugin,
         borderPlugin,
+        alignmentPlugin,
         columnsPlugin,
         SEOPreviewPlugin,
         StockImagePlugin,

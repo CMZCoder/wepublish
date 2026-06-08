@@ -1,4 +1,5 @@
 import { BreakConfig } from './components/break.config';
+import { ButtonConfig } from './components/content/button.config';
 import { ListicleConfig } from './components/content/listicle.config';
 import { QuoteConfig } from './components/content/quote.config';
 import { RichTextConfig } from './components/content/richtext.config';
@@ -86,6 +87,7 @@ export const config: UserConfig = {
     Facebook: withColumnSpan(FacebookConfig),
     Instagram: withColumnSpan(InstagramConfig),
     Subscribe: withColumnSpan(SubscribeConfig),
+    Button: withColumnSpan(ButtonConfig),
   },
   categories: {
     recommended: {
