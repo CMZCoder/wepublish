@@ -1053,6 +1053,101 @@
       }
     },
     "no": "No",
+    "publishReadiness": {
+      "title": "Publish Intelligence",
+      "description": "Uses deterministic proxy signals only. Semantic quality, factual strength and AI citation likelihood still need human or AI review.",
+      "scoreLabel": "Publish score",
+      "scoreShortLabel": "score",
+      "categoryProgress": "{{passed}} of {{total}} passed",
+      "summary": {
+        "risk": "{{count}} risk",
+        "risks": "{{count}} risks",
+        "warning": "{{count}} warning",
+        "warnings": "{{count}} warnings"
+      },
+      "status": {
+        "ready": "Ready",
+        "review": "Needs review",
+        "risky": "Risky"
+      },
+      "categories": {
+        "editorial": "Editorial basics",
+        "seo-social": "SEO & social",
+        "aeo": "AEO proxy signals",
+        "geo": "GEO proxy signals"
+      },
+      "checks": {
+        "slug": {
+          "pass": "Slug is present.",
+          "risk": "Slug is missing."
+        },
+        "title": {
+          "pass": "Title is present.",
+          "risk": "Title is missing or too short."
+        },
+        "summary": {
+          "pass": "Lead or description is present.",
+          "risk": "Lead or description is missing."
+        },
+        "visible-author": {
+          "pass": "Visible author signal is present.",
+          "warning": "Author exists but is hidden from the visible article.",
+          "risk": "Author is missing."
+        },
+        "tags": {
+          "pass": "Tags are present.",
+          "warning": "No tags are set."
+        },
+        "image": {
+          "pass": "Image signal is present.",
+          "warning": "No main or content image was found."
+        },
+        "hidden": {
+          "pass": "Content is discoverable by default.",
+          "warning": "Content is hidden and may be harder to discover."
+        },
+        "seo-title-length": {
+          "pass": "SEO title length is within the target range.",
+          "warning": "SEO title is missing, short, or long."
+        },
+        "description-length": {
+          "pass": "Description length is within the target range.",
+          "warning": "Description is missing, short, or long."
+        },
+        "social-image": {
+          "pass": "Social preview image is available.",
+          "warning": "Social preview image is missing."
+        },
+        "canonical-url": {
+          "pass": "Canonical URL is empty or valid.",
+          "warning": "Canonical URL is not a valid http(s) URL."
+        },
+        "opening-context-signals": {
+          "pass": "Opening paragraph has measurable context signals.",
+          "warning": "Opening paragraph has weak measurable context signals."
+        },
+        "headings": {
+          "pass": "Headings or list structure are present.",
+          "warning": "No heading or list structure was found."
+        },
+        "named-signals": {
+          "pass": "Visible text contains names, numbers, or date-like signals.",
+          "warning": "Visible text has few measurable entity/date/number signals."
+        },
+        "publish-date": {
+          "pass": "Publish date is set.",
+          "warning": "Publish date is not set."
+        },
+        "source-links": {
+          "pass": "Source or external links are present.",
+          "warning": "No source or external links were found."
+        },
+        "image-context": {
+          "pass": "Image caption/context is present.",
+          "warning": "Image caption/context is missing."
+        }
+      }
+    },
     "pageEditor": {
       "validationFailedHeader": "Validation failed",
       "validationFailedGeneric": "Cannot save. Please fix the highlighted errors.",

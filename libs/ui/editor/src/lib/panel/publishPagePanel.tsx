@@ -10,11 +10,14 @@ import {
   DescriptionListItemWithMessage,
   InfoColor,
 } from '../atoms';
+import { BlockValue } from '../blocks/types';
 import { PageMetadata } from './pageMetadataPanel';
+import { PublishReadinessPanel } from './publishReadinessPanel';
 
 export interface PublishPagePanelProps {
   publishedAtDate?: Date;
   metadata: PageMetadata;
+  blocks?: readonly BlockValue[];
 
   onClose(): void;
   onConfirm(publishedAt: Date): void;
@@ -23,6 +26,7 @@ export interface PublishPagePanelProps {
 function PublishPagePanel({
   publishedAtDate,
   metadata,
+  blocks,
   onClose,
   onConfirm,
 }: PublishPagePanelProps) {
@@ -54,6 +58,15 @@ function PublishPagePanel({
             changeDate={date => setPublishedAt(date)}
           />
         </div>
+
+        <PublishReadinessPanel
+          input={{
+            type: 'page',
+            metadata,
+            blocks,
+            publishedAt,
+          }}
+        />
 
         <DescriptionList>
           <DescriptionListItem label={t('pageEditor.panels.url')}>
@@ -129,7 +142,9 @@ function PublishPagePanel({
         <Button
           appearance="primary"
           disabled={!publishedAt}
-          onClick={() => onConfirm(publishedAt!)}
+          onClick={() => {
+            if (publishedAt) onConfirm(publishedAt);
+          }}
         >
           {t('pageEditor.panels.confirm')}
         </Button>

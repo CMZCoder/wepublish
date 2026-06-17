@@ -731,6 +731,7 @@ function ArticleEditor() {
             : undefined
           }
           metadata={metadata}
+          blocks={blocks}
           onClose={() => setPublishDialogOpen(false)}
           onConfirm={publishedAt => {
             handlePublish(publishedAt);

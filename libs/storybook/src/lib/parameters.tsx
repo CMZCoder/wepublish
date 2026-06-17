@@ -42,4 +42,5 @@ export const parameters = {
     defaultOptions,
   },
   i18,
+  i18n: i18,
 } as Preview['parameters'];
