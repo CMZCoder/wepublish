@@ -2,7 +2,11 @@ import { EditorBlockType } from '@wepublish/editor/api';
 import { BlockFormat, InlineFormat } from '@wepublish/richtext';
 
 import { EmbedType } from '../blocks/types';
-import { getPublishReadiness, PublishReadinessInput } from './publishReadiness';
+import {
+  getPublishReadiness,
+  getPublishReadinessSignals,
+  PublishReadinessInput,
+} from './publishReadiness';
 
 describe('getPublishReadiness', () => {
   const getCheck = (
@@ -174,5 +178,56 @@ describe('getPublishReadiness', () => {
         'source-links'
       ).status
     ).toBe('pass');
+  });
+
+  it('exports bounded content signals without changing deterministic scoring', () => {
+    const input: PublishReadinessInput = {
+      type: 'article',
+      publishedAt: new Date('2026-06-17T10:00:00.000Z'),
+      metadata: {
+        slug: 'zurich-climate-plan-2026',
+        title: 'Zurich presents climate plan for 2026',
+        lead: 'Zurich presented its 2026 climate plan with transport measures.',
+        authors: [{ name: 'Lina Meier' }],
+        tags: ['climate'],
+        image: { filename: 'zurich.jpg' },
+        hidden: false,
+        hideAuthor: false,
+      },
+      blocks: [
+        {
+          key: 'intro',
+          type: EditorBlockType.RichText,
+          value: {
+            richText: [
+              {
+                type: BlockFormat.Paragraph,
+                children: [
+                  {
+                    text: 'Zurich officials said the 2026 plan affects 420000 residents and focuses on public transport.',
+                  },
+                  {
+                    type: InlineFormat.Link,
+                    url: 'https://stadt-zuerich.example/source',
+                    title: 'source',
+                    children: [{ text: 'City source' }],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const before = getPublishReadiness(input);
+    const signals = getPublishReadinessSignals(input.blocks ?? []);
+    const after = getPublishReadiness(input);
+
+    expect(signals.firstParagraph).toContain('Zurich officials');
+    expect(signals.sourceLinks).toEqual([
+      'https://stadt-zuerich.example/source',
+    ]);
+    expect(after).toEqual(before);
   });
 });

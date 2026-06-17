@@ -53,7 +53,7 @@ export interface PublishReadinessResult {
   readonly checks: PublishReadinessCheck[];
 }
 
-interface ContentSignals {
+export interface PublishReadinessSignals {
   readonly text: string;
   readonly firstParagraph: string;
   readonly headingCount: number;
@@ -177,6 +177,12 @@ export function getPublishReadiness({
   return scoreChecks(checks);
 }
 
+export function getPublishReadinessSignals(
+  blocks: readonly BlockValue[] = []
+): PublishReadinessSignals {
+  return getContentSignals(blocks);
+}
+
 function check(
   id: string,
   category: PublishReadinessCategory,
@@ -252,14 +258,16 @@ function getImageContextStatus(
   return captionCount > 0 ? 'pass' : 'warning';
 }
 
-function getContentSignals(blocks: readonly BlockValue[]): ContentSignals {
+function getContentSignals(
+  blocks: readonly BlockValue[]
+): PublishReadinessSignals {
   return blocks.reduce(
     (signals, block) => mergeSignals(signals, getBlockSignals(block)),
     emptySignals()
   );
 }
 
-function getBlockSignals(block: BlockValue): ContentSignals {
+function getBlockSignals(block: BlockValue): PublishReadinessSignals {
   switch (block.type) {
     case EditorBlockType.Title:
       return fromText(`${block.value.title} ${block.value.lead}`);
@@ -322,10 +330,10 @@ function getBlockSignals(block: BlockValue): ContentSignals {
   }
 }
 
-function getRichTextSignals(nodes: SlateNode[]): ContentSignals {
+function getRichTextSignals(nodes: SlateNode[]): PublishReadinessSignals {
   return nodes.reduce((signals, node) => {
     const text = SlateNode.string(node);
-    const nodeSignals: ContentSignals = {
+    const nodeSignals: PublishReadinessSignals = {
       text,
       firstParagraph:
         (
@@ -384,9 +392,9 @@ function getLinks(node: SlateNode): string[] {
 }
 
 function mergeSignals(
-  left: ContentSignals,
-  right: ContentSignals
-): ContentSignals {
+  left: PublishReadinessSignals,
+  right: PublishReadinessSignals
+): PublishReadinessSignals {
   return {
     text: `${left.text} ${right.text}`.trim(),
     firstParagraph: left.firstParagraph || right.firstParagraph,
@@ -398,7 +406,7 @@ function mergeSignals(
   };
 }
 
-function emptySignals(): ContentSignals {
+function emptySignals(): PublishReadinessSignals {
   return {
     text: '',
     firstParagraph: '',
@@ -410,7 +418,7 @@ function emptySignals(): ContentSignals {
   };
 }
 
-function fromText(value: string | null | undefined): ContentSignals {
+function fromText(value: string | null | undefined): PublishReadinessSignals {
   return {
     ...emptySignals(),
     text: text(value),
