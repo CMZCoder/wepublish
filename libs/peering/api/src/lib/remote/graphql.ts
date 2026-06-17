@@ -2011,6 +2011,7 @@ export type Mutation = {
   resetPasswordWithToken: Scalars['Boolean'];
   /** Resets the two-factor authentication configuration for a user. The user will need to set up 2FA again on next login. */
   resetUserTotp: Scalars['Boolean'];
+  reviewPublishReadiness: PublishReadinessReview;
   /** This mutation revokes and deletes the active session. */
   revokeActiveSession: Scalars['Boolean'];
   /** This mutation sends a login link to the email if the user exists. Method will always return email address */
@@ -2854,6 +2855,11 @@ export type MutationResetPasswordWithTokenArgs = {
 
 export type MutationResetUserTotpArgs = {
   userId: Scalars['String'];
+};
+
+
+export type MutationReviewPublishReadinessArgs = {
+  input: PublishReadinessReviewInput;
 };
 
 
@@ -4208,6 +4214,68 @@ export type PublicSubscriptionConnection = {
   nodes: Array<PublicSubscription>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
+};
+
+export type PublishReadinessReview = {
+  __typename?: 'PublishReadinessReview';
+  model: Scalars['String'];
+  provider: Scalars['String'];
+  suggestions: Array<PublishReadinessReviewSuggestion>;
+  summary: Scalars['String'];
+  warnings: Array<Scalars['String']>;
+};
+
+export type PublishReadinessReviewCheckInput = {
+  category: Scalars['String'];
+  id: Scalars['String'];
+  status: Scalars['String'];
+};
+
+export type PublishReadinessReviewInput = {
+  contentType: Scalars['String'];
+  deterministicChecks: Array<PublishReadinessReviewCheckInput>;
+  deterministicScore: Scalars['Int'];
+  deterministicStatus: Scalars['String'];
+  metadata: PublishReadinessReviewMetadataInput;
+  signals: PublishReadinessReviewSignalsInput;
+};
+
+export type PublishReadinessReviewMetadataInput = {
+  authors: Array<Scalars['String']>;
+  canonicalUrl?: InputMaybe<Scalars['String']>;
+  hasImage: Scalars['Boolean'];
+  hidden: Scalars['Boolean'];
+  hideAuthor: Scalars['Boolean'];
+  leadOrDescription?: InputMaybe<Scalars['String']>;
+  publishedAt?: InputMaybe<Scalars['String']>;
+  seoTitle?: InputMaybe<Scalars['String']>;
+  slug?: InputMaybe<Scalars['String']>;
+  socialMediaDescription?: InputMaybe<Scalars['String']>;
+  socialMediaTitle?: InputMaybe<Scalars['String']>;
+  tags: Array<Scalars['String']>;
+  title?: InputMaybe<Scalars['String']>;
+  url?: InputMaybe<Scalars['String']>;
+};
+
+export type PublishReadinessReviewSignalsInput = {
+  captionCount: Scalars['Int'];
+  firstParagraph: Scalars['String'];
+  headingCount: Scalars['Int'];
+  imageCount: Scalars['Int'];
+  listCount: Scalars['Int'];
+  sourceLinks: Array<Scalars['String']>;
+  text: Scalars['String'];
+};
+
+export type PublishReadinessReviewSuggestion = {
+  __typename?: 'PublishReadinessReviewSuggestion';
+  category: Scalars['String'];
+  confidence: Scalars['String'];
+  currentValue?: Maybe<Scalars['String']>;
+  id: Scalars['String'];
+  rationale: Scalars['String'];
+  suggestedValue?: Maybe<Scalars['String']>;
+  title: Scalars['String'];
 };
 
 export type Query = {

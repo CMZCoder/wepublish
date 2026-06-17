@@ -2058,6 +2058,7 @@ type Mutation {
   Resets the two-factor authentication configuration for a user. The user will need to set up 2FA again on next login.
   """
   resetUserTotp(userId: String!): Boolean!
+  reviewPublishReadiness(input: PublishReadinessReviewInput!): PublishReadinessReview!
 
   """This mutation revokes and deletes the active session."""
   revokeActiveSession: Boolean!
@@ -2969,6 +2970,66 @@ type PublicSubscriptionConnection {
   nodes: [PublicSubscription!]!
   pageInfo: PageInfo!
   totalCount: Int!
+}
+
+type PublishReadinessReview {
+  model: String!
+  provider: String!
+  suggestions: [PublishReadinessReviewSuggestion!]!
+  summary: String!
+  warnings: [String!]!
+}
+
+input PublishReadinessReviewCheckInput {
+  category: String!
+  id: String!
+  status: String!
+}
+
+input PublishReadinessReviewInput {
+  contentType: String!
+  deterministicChecks: [PublishReadinessReviewCheckInput!]!
+  deterministicScore: Int!
+  deterministicStatus: String!
+  metadata: PublishReadinessReviewMetadataInput!
+  signals: PublishReadinessReviewSignalsInput!
+}
+
+input PublishReadinessReviewMetadataInput {
+  authors: [String!]!
+  canonicalUrl: String
+  hasImage: Boolean!
+  hidden: Boolean!
+  hideAuthor: Boolean!
+  leadOrDescription: String
+  publishedAt: String
+  seoTitle: String
+  slug: String
+  socialMediaDescription: String
+  socialMediaTitle: String
+  tags: [String!]!
+  title: String
+  url: String
+}
+
+input PublishReadinessReviewSignalsInput {
+  captionCount: Int!
+  firstParagraph: String!
+  headingCount: Int!
+  imageCount: Int!
+  listCount: Int!
+  sourceLinks: [String!]!
+  text: String!
+}
+
+type PublishReadinessReviewSuggestion {
+  category: String!
+  confidence: String!
+  currentValue: String
+  id: String!
+  rationale: String!
+  suggestedValue: String
+  title: String!
 }
 
 type Query {

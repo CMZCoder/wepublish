@@ -1,0 +1,17 @@
+mutation ReviewPublishReadiness($input: PublishReadinessReviewInput!) {
+  reviewPublishReadiness(input: $input) {
+    provider
+    model
+    summary
+    suggestions {
+      id
+      category
+      title
+      currentValue
+      suggestedValue
+      rationale
+      confidence
+    }
+    warnings
+  }
+}

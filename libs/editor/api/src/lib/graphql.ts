@@ -2013,6 +2013,7 @@ export type Mutation = {
   resetPasswordWithToken: Scalars['Boolean'];
   /** Resets the two-factor authentication configuration for a user. The user will need to set up 2FA again on next login. */
   resetUserTotp: Scalars['Boolean'];
+  reviewPublishReadiness: PublishReadinessReview;
   /** This mutation revokes and deletes the active session. */
   revokeActiveSession: Scalars['Boolean'];
   /** This mutation sends a login link to the email if the user exists. Method will always return email address */
@@ -2856,6 +2857,11 @@ export type MutationResetPasswordWithTokenArgs = {
 
 export type MutationResetUserTotpArgs = {
   userId: Scalars['String'];
+};
+
+
+export type MutationReviewPublishReadinessArgs = {
+  input: PublishReadinessReviewInput;
 };
 
 
@@ -4210,6 +4216,68 @@ export type PublicSubscriptionConnection = {
   nodes: Array<PublicSubscription>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
+};
+
+export type PublishReadinessReview = {
+  __typename?: 'PublishReadinessReview';
+  model: Scalars['String'];
+  provider: Scalars['String'];
+  suggestions: Array<PublishReadinessReviewSuggestion>;
+  summary: Scalars['String'];
+  warnings: Array<Scalars['String']>;
+};
+
+export type PublishReadinessReviewCheckInput = {
+  category: Scalars['String'];
+  id: Scalars['String'];
+  status: Scalars['String'];
+};
+
+export type PublishReadinessReviewInput = {
+  contentType: Scalars['String'];
+  deterministicChecks: Array<PublishReadinessReviewCheckInput>;
+  deterministicScore: Scalars['Int'];
+  deterministicStatus: Scalars['String'];
+  metadata: PublishReadinessReviewMetadataInput;
+  signals: PublishReadinessReviewSignalsInput;
+};
+
+export type PublishReadinessReviewMetadataInput = {
+  authors: Array<Scalars['String']>;
+  canonicalUrl?: InputMaybe<Scalars['String']>;
+  hasImage: Scalars['Boolean'];
+  hidden: Scalars['Boolean'];
+  hideAuthor: Scalars['Boolean'];
+  leadOrDescription?: InputMaybe<Scalars['String']>;
+  publishedAt?: InputMaybe<Scalars['String']>;
+  seoTitle?: InputMaybe<Scalars['String']>;
+  slug?: InputMaybe<Scalars['String']>;
+  socialMediaDescription?: InputMaybe<Scalars['String']>;
+  socialMediaTitle?: InputMaybe<Scalars['String']>;
+  tags: Array<Scalars['String']>;
+  title?: InputMaybe<Scalars['String']>;
+  url?: InputMaybe<Scalars['String']>;
+};
+
+export type PublishReadinessReviewSignalsInput = {
+  captionCount: Scalars['Int'];
+  firstParagraph: Scalars['String'];
+  headingCount: Scalars['Int'];
+  imageCount: Scalars['Int'];
+  listCount: Scalars['Int'];
+  sourceLinks: Array<Scalars['String']>;
+  text: Scalars['String'];
+};
+
+export type PublishReadinessReviewSuggestion = {
+  __typename?: 'PublishReadinessReviewSuggestion';
+  category: Scalars['String'];
+  confidence: Scalars['String'];
+  currentValue?: Maybe<Scalars['String']>;
+  id: Scalars['String'];
+  rationale: Scalars['String'];
+  suggestedValue?: Maybe<Scalars['String']>;
+  title: Scalars['String'];
 };
 
 export type Query = {
@@ -7746,6 +7814,13 @@ export type DeletePollVotesMutationVariables = Exact<{
 
 
 export type DeletePollVotesMutation = { __typename?: 'Mutation', deletePollVotes: { __typename?: 'DeletePollVotesResult', count: number } };
+
+export type ReviewPublishReadinessMutationVariables = Exact<{
+  input: PublishReadinessReviewInput;
+}>;
+
+
+export type ReviewPublishReadinessMutation = { __typename?: 'Mutation', reviewPublishReadiness: { __typename?: 'PublishReadinessReview', provider: string, model: string, summary: string, warnings: Array<string>, suggestions: Array<{ __typename?: 'PublishReadinessReviewSuggestion', id: string, category: string, title: string, currentValue?: string | null, suggestedValue?: string | null, rationale: string, confidence: string }> } };
 
 export type SettingsListQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -16067,6 +16142,51 @@ export function useDeletePollVotesMutation(baseOptions?: Apollo.MutationHookOpti
 export type DeletePollVotesMutationHookResult = ReturnType<typeof useDeletePollVotesMutation>;
 export type DeletePollVotesMutationResult = Apollo.MutationResult<DeletePollVotesMutation>;
 export type DeletePollVotesMutationOptions = Apollo.BaseMutationOptions<DeletePollVotesMutation, DeletePollVotesMutationVariables>;
+export const ReviewPublishReadinessDocument = gql`
+    mutation ReviewPublishReadiness($input: PublishReadinessReviewInput!) {
+  reviewPublishReadiness(input: $input) {
+    provider
+    model
+    summary
+    suggestions {
+      id
+      category
+      title
+      currentValue
+      suggestedValue
+      rationale
+      confidence
+    }
+    warnings
+  }
+}
+    `;
+export type ReviewPublishReadinessMutationFn = Apollo.MutationFunction<ReviewPublishReadinessMutation, ReviewPublishReadinessMutationVariables>;
+
+/**
+ * __useReviewPublishReadinessMutation__
+ *
+ * To run a mutation, you first call `useReviewPublishReadinessMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useReviewPublishReadinessMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [reviewPublishReadinessMutation, { data, loading, error }] = useReviewPublishReadinessMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useReviewPublishReadinessMutation(baseOptions?: Apollo.MutationHookOptions<ReviewPublishReadinessMutation, ReviewPublishReadinessMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ReviewPublishReadinessMutation, ReviewPublishReadinessMutationVariables>(ReviewPublishReadinessDocument, options);
+      }
+export type ReviewPublishReadinessMutationHookResult = ReturnType<typeof useReviewPublishReadinessMutation>;
+export type ReviewPublishReadinessMutationResult = Apollo.MutationResult<ReviewPublishReadinessMutation>;
+export type ReviewPublishReadinessMutationOptions = Apollo.BaseMutationOptions<ReviewPublishReadinessMutation, ReviewPublishReadinessMutationVariables>;
 export const SettingsListDocument = gql`
     query SettingsList {
   settings {
