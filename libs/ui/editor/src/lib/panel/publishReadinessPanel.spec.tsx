@@ -156,6 +156,34 @@ describe('PublishReadinessPanel', () => {
       getCheckIconContrast('Content is discoverable by default.')
     ).toBeGreaterThanOrEqual(4.5);
   });
+
+  it('renders optional AI review lane without changing the deterministic score', () => {
+    render(
+      <PublishReadinessPanel
+        result={{
+          status: 'review',
+          score: 74,
+          checks: [
+            {
+              id: 'slug',
+              category: 'editorial',
+              status: 'pass',
+            },
+          ],
+        }}
+        aiReview={{
+          state: 'ready',
+          onReview: jest.fn(),
+        }}
+      />
+    );
+
+    expect(screen.getByText('74%')).toBeInTheDocument();
+    expect(screen.getByLabelText('AI review')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /run ai review/i })
+    ).toBeInTheDocument();
+  });
 });
 
 function getCheckIconContrast(label: string) {

@@ -1,4 +1,8 @@
 import styled from '@emotion/styled';
+import {
+  PublishReadinessAIReview,
+  type PublishReadinessAIReviewController,
+} from '@wepublish/ai/editor';
 import type { Theme } from '@mui/material/styles';
 import type { CSSProperties } from 'react';
 import { useMemo } from 'react';
@@ -24,6 +28,7 @@ import { getPublishReadiness } from './publishReadiness';
 export interface PublishReadinessPanelProps {
   readonly input?: PublishReadinessInput;
   readonly result?: PublishReadinessResult;
+  readonly aiReview?: PublishReadinessAIReviewController;
 }
 
 const Root = styled.section`
@@ -366,6 +371,7 @@ const CHECK_DEFAULTS: Record<string, Record<string, string>> = {
 export function PublishReadinessPanel({
   input,
   result,
+  aiReview,
 }: PublishReadinessPanelProps) {
   const { t } = useTranslation();
   const readiness = useMemo(
@@ -512,6 +518,8 @@ export function PublishReadinessPanel({
             );
           })}
         </CategoryGrid>
+
+        {aiReview && <PublishReadinessAIReview controller={aiReview} />}
       </Body>
     </Root>
   );
