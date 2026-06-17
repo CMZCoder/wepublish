@@ -23,6 +23,7 @@ export * from './publishArticlePanel';
 export * from './publishPagePanel';
 export * from './publishReadiness';
 export * from './publishReadinessPanel';
+export * from './publishReadinessPanelWithAI';
 export * from './selectCommentsPanel';
 export * from './selectEventsPanel';
 export * from './selectPollPanel';

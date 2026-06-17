@@ -12,7 +12,7 @@ import {
 } from '../atoms';
 import { BlockValue } from '../blocks/types';
 import { PageMetadata } from './pageMetadataPanel';
-import { PublishReadinessPanel } from './publishReadinessPanel';
+import { PublishReadinessPanelWithAI } from './publishReadinessPanelWithAI';
 
 export interface PublishPagePanelProps {
   publishedAtDate?: Date;
@@ -59,7 +59,7 @@ function PublishPagePanel({
           />
         </div>
 
-        <PublishReadinessPanel
+        <PublishReadinessPanelWithAI
           input={{
             type: 'page',
             metadata,

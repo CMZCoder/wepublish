@@ -12,7 +12,7 @@ import {
 } from '../atoms';
 import { BlockValue } from '../blocks/types';
 import { ArticleMetadata } from './articleMetadataPanel';
-import { PublishReadinessPanel } from './publishReadinessPanel';
+import { PublishReadinessPanelWithAI } from './publishReadinessPanelWithAI';
 
 export interface PublishArticlePanelProps {
   publishedAtDate?: Date;
@@ -77,7 +77,7 @@ function PublishArticlePanel({
           : t('articleEditor.panels.notPublishedYet')}
         </div>
 
-        <PublishReadinessPanel
+        <PublishReadinessPanelWithAI
           input={{
             type: 'article',
             metadata,

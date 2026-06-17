@@ -2,10 +2,25 @@ import '@testing-library/jest-dom';
 
 import { createTheme, ThemeProvider } from '@mui/material';
 import { render as rtlRender, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 
 import type { PublishReadinessStatus } from './publishReadiness';
 import { PublishReadinessPanel } from './publishReadinessPanel';
+import { PublishReadinessPanelWithAI } from './publishReadinessPanelWithAI';
+
+const mockReviewPublishReadiness = jest.fn();
+const mockUseReviewPublishReadinessMutation = jest.fn(() => [
+  mockReviewPublishReadiness,
+  { loading: false, error: undefined, data: undefined },
+]);
+
+jest.mock('@wepublish/editor/api', () => ({
+  ...jest.requireActual('@wepublish/editor/api'),
+  getApiClientV2: jest.fn(() => undefined),
+  useReviewPublishReadinessMutation: (...args: unknown[]) =>
+    mockUseReviewPublishReadinessMutation(...args),
+}));
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -19,6 +34,16 @@ const render = (ui: ReactElement) =>
   rtlRender(<ThemeProvider theme={testTheme}>{ui}</ThemeProvider>);
 
 describe('PublishReadinessPanel', () => {
+  beforeEach(() => {
+    mockReviewPublishReadiness.mockReset();
+    mockReviewPublishReadiness.mockResolvedValue({});
+    mockUseReviewPublishReadinessMutation.mockClear();
+    mockUseReviewPublishReadinessMutation.mockReturnValue([
+      mockReviewPublishReadiness,
+      { loading: false, error: undefined, data: undefined },
+    ]);
+  });
+
   it('renders the readiness score and deterministic proxy disclaimer', () => {
     render(
       <PublishReadinessPanel
@@ -183,6 +208,47 @@ describe('PublishReadinessPanel', () => {
     expect(
       screen.getByRole('button', { name: /run ai review/i })
     ).toBeInTheDocument();
+  });
+
+  it('renders AI-enabled readiness container and sends bounded context to the mutation', async () => {
+    render(
+      <PublishReadinessPanelWithAI
+        input={{
+          type: 'page',
+          metadata: {
+            slug: 'about',
+            title: 'About this newsroom',
+            description: 'A concise page about this newsroom and its mission.',
+            tags: ['about'],
+            hidden: false,
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText('Publish Intelligence')).toBeInTheDocument();
+    expect(screen.getByLabelText('AI review')).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /run ai review/i })
+    );
+
+    expect(mockReviewPublishReadiness).toHaveBeenCalledWith({
+      variables: {
+        input: expect.objectContaining({
+          contentType: 'page',
+          metadata: expect.objectContaining({
+            slug: 'about',
+            title: 'About this newsroom',
+            tags: ['about'],
+          }),
+          deterministicChecks: expect.any(Array),
+          signals: expect.objectContaining({
+            text: expect.any(String),
+          }),
+        }),
+      },
+    });
   });
 });
 
