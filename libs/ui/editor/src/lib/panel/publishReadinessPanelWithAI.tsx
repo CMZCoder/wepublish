@@ -4,9 +4,9 @@ import type {
   PublishReadinessAIReviewController,
 } from '@wepublish/ai/editor';
 import {
-  getApiClientV2,
   type PublishReadinessReviewInput as PublishReadinessReviewMutationInput,
   type ReviewPublishReadinessMutation,
+  getApiClientV2,
   useReviewPublishReadinessMutation,
 } from '@wepublish/editor/api';
 import { useCallback, useMemo, useState } from 'react';
@@ -15,8 +15,8 @@ import type { PublishReadinessInput } from './publishReadiness';
 import { getPublishReadiness } from './publishReadiness';
 import { PublishReadinessPanel } from './publishReadinessPanel';
 import {
-  getPublishReadinessReviewContext,
   type PublishReadinessReviewContext,
+  getPublishReadinessReviewContext,
 } from './publishReadinessReviewContext';
 
 type ReviewSuggestion =

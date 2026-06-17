@@ -41,3 +41,24 @@ uses WePublish GraphQL and server-side provider credentials.
 
 The AI review lane returns suggestions or a clear provider error. The
 deterministic publish score remains visible and unchanged.
+
+## Storybook Visual Proof
+
+Local screenshots are stored outside the repository at:
+
+```text
+/home/void/CodexScreenshots/wepublish-publish-intelligence-ai-review/
+```
+
+Captured states:
+
+- `ai-ready-desktop.png`
+- `ai-reviewing-desktop.png`
+- `ai-suggestions-desktop.png`
+- `ai-provider-error-desktop.png`
+- `ai-suggestions-mobile.png`
+
+The Storybook route is `Editor/Publish Intelligence`. The visual proof checks
+that deterministic proxy checks stay visible, the AI review lane is clearly
+non-blocking editorial guidance, the human-review disclaimer remains present,
+and the mobile state has no horizontal overflow.

@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import type { Meta, StoryObj } from '@storybook/react';
+import type { PublishReadinessAIReviewController } from '@wepublish/ai/editor';
 import type { PublishReadinessResult } from '@wepublish/ui/editor';
 import { PublishReadinessPanel } from '@wepublish/ui/editor';
 import { CustomProvider } from 'rsuite';
@@ -104,13 +105,83 @@ const riskyResult: PublishReadinessResult = {
   ],
 };
 
-const renderStory = (result: PublishReadinessResult) => (
+const aiReady: PublishReadinessAIReviewController = {
+  state: 'ready',
+};
+
+const aiLoading: PublishReadinessAIReviewController = {
+  state: 'loading',
+};
+
+const aiSuggestions: PublishReadinessAIReviewController = {
+  state: 'suggestions',
+  summary:
+    'The piece is publishable, but the opening can answer the reader question sooner and the source trail can be clearer.',
+  suggestions: [
+    {
+      id: 'lead-answer',
+      category: 'lead',
+      confidence: 'medium',
+      title: 'Move the concrete answer into the first paragraph',
+      currentValue:
+        'The opening introduces the topic before explaining impact.',
+      suggestedValue:
+        'Zurich plans new transport rules from 2026, affecting commuters, school routes and delivery windows.',
+      rationale:
+        'An answer-first lead gives readers and answer engines a clear summary before the background.',
+    },
+    {
+      id: 'seo-description',
+      category: 'seo-social',
+      confidence: 'high',
+      title: 'Tighten the social description',
+      suggestedValue:
+        'What Zurich’s 2026 transport proposal changes, who is affected and where the city published the plan.',
+      rationale:
+        'The current metadata is present, but a more specific description improves scan value in search and social previews.',
+    },
+    {
+      id: 'source-cue',
+      category: 'aeo-geo',
+      confidence: 'medium',
+      title: 'Add a visible source cue near the quoted number',
+      currentValue:
+        '12,000 residents are mentioned without nearby attribution.',
+      suggestedValue:
+        'According to the city planning office, roughly 12,000 residents live inside the affected zone.',
+      rationale:
+        'Generative answer systems and readers benefit when factual claims carry nearby source context.',
+    },
+  ],
+  warnings: [
+    'Verify the resident count against the original city document before publishing.',
+  ],
+};
+
+const aiError: PublishReadinessAIReviewController = {
+  state: 'error',
+  message:
+    'Local AI provider is unavailable. Deterministic checks remain available.',
+};
+
+const aiUnavailable: PublishReadinessAIReviewController = {
+  state: 'unavailable',
+  message: 'Configure an AI provider to run editorial suggestions.',
+};
+
+const renderStory = (
+  result: PublishReadinessResult,
+  aiReview?: PublishReadinessAIReviewController
+) => (
   <ThemeProvider theme={theme}>
     <CustomProvider>
       <CssBaseline />
       <StorySurface>
         <StoryFrame>
-          <PublishReadinessPanel result={result} />
+          <PublishReadinessPanel
+            result={result}
+            aiReview={aiReview}
+          />
         </StoryFrame>
       </StorySurface>
     </CustomProvider>
@@ -127,10 +198,16 @@ export default {
         <StorySurface>
           <StoryGrid>
             <StoryFrame>
-              <PublishReadinessPanel result={readyResult} />
+              <PublishReadinessPanel
+                result={readyResult}
+                aiReview={aiReady}
+              />
             </StoryFrame>
             <StoryFrame>
-              <PublishReadinessPanel result={reviewResult} />
+              <PublishReadinessPanel
+                result={reviewResult}
+                aiReview={aiSuggestions}
+              />
             </StoryFrame>
           </StoryGrid>
         </StorySurface>
@@ -151,4 +228,24 @@ export const NeedsReview: StoryObj<typeof PublishReadinessPanel> = {
 
 export const Risky: StoryObj<typeof PublishReadinessPanel> = {
   render: () => renderStory(riskyResult),
+};
+
+export const AIReady: StoryObj<typeof PublishReadinessPanel> = {
+  render: () => renderStory(reviewResult, aiReady),
+};
+
+export const AIReviewing: StoryObj<typeof PublishReadinessPanel> = {
+  render: () => renderStory(reviewResult, aiLoading),
+};
+
+export const AISuggestions: StoryObj<typeof PublishReadinessPanel> = {
+  render: () => renderStory(reviewResult, aiSuggestions),
+};
+
+export const AIProviderError: StoryObj<typeof PublishReadinessPanel> = {
+  render: () => renderStory(reviewResult, aiError),
+};
+
+export const AIUnavailable: StoryObj<typeof PublishReadinessPanel> = {
+  render: () => renderStory(reviewResult, aiUnavailable),
 };

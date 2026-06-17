@@ -1,9 +1,9 @@
 import styled from '@emotion/styled';
-import {
-  PublishReadinessAIReview,
-  type PublishReadinessAIReviewController,
-} from '@wepublish/ai/editor';
 import type { Theme } from '@mui/material/styles';
+import {
+  type PublishReadinessAIReviewController,
+  PublishReadinessAIReview,
+} from '@wepublish/ai/editor';
 import type { CSSProperties } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
