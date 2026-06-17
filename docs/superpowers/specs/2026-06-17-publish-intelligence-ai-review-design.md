@@ -153,6 +153,9 @@ are:
 Implementation should keep provider keys server-side. The browser should call
 WePublish GraphQL only.
 
+The implementation proof path lives in
+`docs/superpowers/proof/publish-intelligence-ai-review-local.md`.
+
 References checked on 2026-06-17:
 
 - https://docs.ollama.com/cloud
