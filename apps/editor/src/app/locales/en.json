@@ -1056,6 +1056,43 @@
     "publishReadiness": {
       "title": "Publish Intelligence",
       "description": "Uses deterministic proxy signals only. Semantic quality, factual strength and AI citation likelihood still need human or AI review.",
+      "discovery": {
+        "title": "Discovery map",
+        "description": "Shows how observable signals support search snippets, answer surfaces, citation trails and access clarity.",
+        "signalProgress": "{{ready}} of {{total}} signals ready",
+        "noSignals": "No signals available for this surface.",
+        "state": {
+          "ready": "Ready",
+          "review": "Needs work",
+          "risk": "At risk"
+        },
+        "channels": {
+          "search": {
+            "title": "Search preview"
+          },
+          "answers": {
+            "title": "Answer readiness"
+          },
+          "citations": {
+            "title": "AI citation trail"
+          },
+          "access": {
+            "title": "Access model"
+          }
+        },
+        "access": {
+          "paywalled": "Paywalled article",
+          "freeArticle": "Free article",
+          "openPage": "Open page",
+          "unknown": "Access not supplied"
+        },
+        "accessEvidence": {
+          "paywalled": "The article uses a paywall selection; public markup can identify gated sections.",
+          "freeArticle": "The article is open; no gated-content marker is expected.",
+          "openPage": "The page is open content; no article paywall signal is expected.",
+          "unknown": "Content metadata was not supplied, so access cannot be inferred."
+        }
+      },
       "scoreLabel": "Publish score",
       "scoreShortLabel": "score",
       "categoryProgress": "{{passed}} of {{total}} passed",

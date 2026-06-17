@@ -2,7 +2,10 @@ import styled from '@emotion/styled';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import type { Meta, StoryObj } from '@storybook/react';
 import type { PublishReadinessAIReviewController } from '@wepublish/ai/editor';
-import type { PublishReadinessResult } from '@wepublish/ui/editor';
+import type {
+  PublishReadinessInput,
+  PublishReadinessResult,
+} from '@wepublish/ui/editor';
 import { PublishReadinessPanel } from '@wepublish/ui/editor';
 import { CustomProvider } from 'rsuite';
 
@@ -56,6 +59,28 @@ const readyResult: PublishReadinessResult = {
     { id: 'source-links', category: 'geo', status: 'warning' },
     { id: 'image-context', category: 'geo', status: 'pass' },
   ],
+};
+
+const paywalledArticleInput: PublishReadinessInput = {
+  type: 'article',
+  publishedAt: new Date('2026-06-17T10:00:00.000Z'),
+  metadata: {
+    slug: 'zurich-climate-plan-2026',
+    title: 'Zurich climate plan changes commuter routes in 2026',
+    seoTitle: 'Zurich climate plan 2026: route changes for commuters',
+    lead: 'Zurich plans new transport rules from 2026, affecting commuters, school routes and delivery windows.',
+    authors: [{ name: 'Lina Meier' }],
+    tags: ['climate', 'zurich', 'transport'],
+    image: { filename: 'zurich-plan.jpg' },
+    socialMediaTitle: 'Zurich climate plan 2026',
+    socialMediaDescription:
+      'What Zurich’s 2026 transport proposal changes, who is affected and where the city published the plan.',
+    socialMediaImage: { filename: 'zurich-social.jpg' },
+    hidden: false,
+    hideAuthor: false,
+    canonicalUrl: 'https://example.com/zurich-climate-plan-2026',
+    paywall: 'member-reporting',
+  },
 };
 
 const reviewResult: PublishReadinessResult = {
@@ -171,7 +196,8 @@ const aiUnavailable: PublishReadinessAIReviewController = {
 
 const renderStory = (
   result: PublishReadinessResult,
-  aiReview?: PublishReadinessAIReviewController
+  aiReview?: PublishReadinessAIReviewController,
+  input: PublishReadinessInput = paywalledArticleInput
 ) => (
   <ThemeProvider theme={theme}>
     <CustomProvider>
@@ -179,6 +205,7 @@ const renderStory = (
       <StorySurface>
         <StoryFrame>
           <PublishReadinessPanel
+            input={input}
             result={result}
             aiReview={aiReview}
           />
@@ -199,12 +226,14 @@ export default {
           <StoryGrid>
             <StoryFrame>
               <PublishReadinessPanel
+                input={paywalledArticleInput}
                 result={readyResult}
                 aiReview={aiReady}
               />
             </StoryFrame>
             <StoryFrame>
               <PublishReadinessPanel
+                input={paywalledArticleInput}
                 result={reviewResult}
                 aiReview={aiSuggestions}
               />

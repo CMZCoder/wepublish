@@ -15,6 +15,7 @@ import {
   MdReportProblem,
 } from 'react-icons/md';
 
+import { PublishDiscoveryMap } from './publishDiscoveryMap';
 import type {
   PublishReadinessCategory,
   PublishReadinessCheck,
@@ -468,6 +469,11 @@ export function PublishReadinessPanel({
               'Uses deterministic proxy signals only. Semantic quality, factual strength and AI citation likelihood still need human or AI review.',
           })}
         </Description>
+
+        <PublishDiscoveryMap
+          input={input}
+          readiness={readiness}
+        />
 
         <CategoryGrid>
           {CATEGORY_ORDER.map(category => {

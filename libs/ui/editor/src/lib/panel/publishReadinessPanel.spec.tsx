@@ -5,7 +5,10 @@ import { render as rtlRender, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 
-import type { PublishReadinessStatus } from './publishReadiness';
+import type {
+  PublishReadinessInput,
+  PublishReadinessStatus,
+} from './publishReadiness';
 import { PublishReadinessPanel } from './publishReadinessPanel';
 import { PublishReadinessPanelWithAI } from './publishReadinessPanelWithAI';
 
@@ -139,7 +142,7 @@ describe('PublishReadinessPanel', () => {
         />
       );
 
-      expect(getContrastRatio(screen.getByText(label))).toBeGreaterThanOrEqual(
+      expect(getContrastRatio(getStatusPill(label))).toBeGreaterThanOrEqual(
         4.5
       );
       view.unmount();
@@ -210,6 +213,146 @@ describe('PublishReadinessPanel', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders an editor-facing discovery map for search, answers, citations and access', () => {
+    const metadata: PublishReadinessInput['metadata'] = {
+      slug: 'zurich-climate-plan-2026',
+      title: 'Zurich presents climate plan for 2026',
+      lead: 'Zurich presented its 2026 climate plan with transport measures.',
+      authors: [{ name: 'Lina Meier' }],
+      tags: ['climate'],
+      hidden: false,
+      hideAuthor: false,
+      paywall: 'member-reporting',
+    };
+
+    render(
+      <PublishReadinessPanel
+        input={{
+          type: 'article',
+          metadata,
+        }}
+        result={{
+          status: 'review',
+          score: 76,
+          checks: [
+            {
+              id: 'seo-title-length',
+              category: 'seo-social',
+              status: 'pass',
+            },
+            {
+              id: 'description-length',
+              category: 'seo-social',
+              status: 'warning',
+            },
+            {
+              id: 'social-image',
+              category: 'seo-social',
+              status: 'pass',
+            },
+            {
+              id: 'canonical-url',
+              category: 'seo-social',
+              status: 'pass',
+            },
+            {
+              id: 'opening-context-signals',
+              category: 'aeo',
+              status: 'warning',
+            },
+            {
+              id: 'headings',
+              category: 'aeo',
+              status: 'pass',
+            },
+            {
+              id: 'named-signals',
+              category: 'aeo',
+              status: 'pass',
+            },
+            {
+              id: 'visible-author',
+              category: 'geo',
+              status: 'pass',
+            },
+            {
+              id: 'publish-date',
+              category: 'geo',
+              status: 'pass',
+            },
+            {
+              id: 'source-links',
+              category: 'geo',
+              status: 'warning',
+            },
+            {
+              id: 'image-context',
+              category: 'geo',
+              status: 'pass',
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByText('Discovery map')).toBeInTheDocument();
+    expect(screen.getByText('Search preview')).toBeInTheDocument();
+    expect(screen.getByText('Answer readiness')).toBeInTheDocument();
+    expect(screen.getByText('AI citation trail')).toBeInTheDocument();
+    expect(screen.getByText('Access model')).toBeInTheDocument();
+    expect(screen.getByText('Paywalled article')).toBeInTheDocument();
+  });
+
+  it('keeps discovery map status markers readable on their color backgrounds', () => {
+    render(
+      <PublishReadinessPanel
+        input={{
+          type: 'article',
+          metadata: {
+            slug: 'zurich-climate-plan-2026',
+            title: 'Zurich presents climate plan for 2026',
+            lead: 'Zurich presented its 2026 climate plan with transport measures.',
+            authors: [{ name: 'Lina Meier' }],
+            hidden: false,
+            hideAuthor: false,
+            paywall: 'member-reporting',
+          },
+        }}
+        result={{
+          status: 'review',
+          score: 68,
+          checks: [
+            {
+              id: 'seo-title-length',
+              category: 'seo-social',
+              status: 'pass',
+            },
+            {
+              id: 'description-length',
+              category: 'seo-social',
+              status: 'warning',
+            },
+            {
+              id: 'source-links',
+              category: 'geo',
+              status: 'risk',
+            },
+          ],
+        }}
+      />
+    );
+
+    for (const label of [
+      'Search preview',
+      'AI citation trail',
+      'Access model',
+    ]) {
+      expect(
+        getContrastRatio(getDiscoveryStatusMarker(label))
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('renders AI-enabled readiness container and sends bounded context to the mutation', async () => {
     render(
       <PublishReadinessPanelWithAI
@@ -266,6 +409,29 @@ function getCheckIconContrast(label: string) {
   }
 
   return getContrastRatio(icon);
+}
+
+function getStatusPill(label: string) {
+  const statusPill = screen
+    .getAllByText(label)
+    .find(element => element.tagName.toLowerCase() === 'span');
+
+  if (!statusPill) {
+    throw new Error(`Missing status pill for ${label}`);
+  }
+
+  return statusPill;
+}
+
+function getDiscoveryStatusMarker(label: string) {
+  const card = screen.getByText(label).closest('article');
+  const marker = card?.querySelector('span');
+
+  if (!marker) {
+    throw new Error(`Missing discovery status marker for ${label}`);
+  }
+
+  return marker;
 }
 
 function getContrastRatio(element: Element) {

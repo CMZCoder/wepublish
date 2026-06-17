@@ -1037,6 +1037,43 @@
     "publishReadiness": {
       "title": "Intelligence de publication",
       "description": "Utilise uniquement des signaux proxy déterministes. La qualité sémantique, la solidité factuelle et la probabilité de citation par l'IA nécessitent encore une revue humaine ou IA.",
+      "discovery": {
+        "title": "Carte de découvrabilité",
+        "description": "Montre comment les signaux observables soutiennent les extraits de recherche, les réponses, les traces de citation et la clarté d'accès.",
+        "signalProgress": "{{ready}} sur {{total}} signaux prêts",
+        "noSignals": "Aucun signal disponible pour cette surface.",
+        "state": {
+          "ready": "Prêt",
+          "review": "À travailler",
+          "risk": "À risque"
+        },
+        "channels": {
+          "search": {
+            "title": "Aperçu recherche"
+          },
+          "answers": {
+            "title": "Préparation aux réponses"
+          },
+          "citations": {
+            "title": "Trace de citation IA"
+          },
+          "access": {
+            "title": "Modèle d'accès"
+          }
+        },
+        "access": {
+          "paywalled": "Article avec paywall",
+          "freeArticle": "Article ouvert",
+          "openPage": "Page ouverte",
+          "unknown": "Accès non fourni"
+        },
+        "accessEvidence": {
+          "paywalled": "L'article utilise une sélection de paywall; le balisage public peut identifier les sections réservées.",
+          "freeArticle": "L'article est ouvert; aucun marqueur de contenu réservé n'est attendu.",
+          "openPage": "La page est un contenu ouvert; aucun signal de paywall d'article n'est attendu.",
+          "unknown": "Les métadonnées du contenu ne sont pas fournies, l'accès ne peut donc pas être inféré."
+        }
+      },
       "scoreLabel": "Score de publication",
       "scoreShortLabel": "score",
       "categoryProgress": "{{passed}} sur {{total}} validés",

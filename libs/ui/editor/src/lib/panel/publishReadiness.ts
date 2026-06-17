@@ -28,6 +28,7 @@ export interface PublishReadinessMetadata {
     readonly name?: string | null;
   } | null>;
   readonly socialMediaImage?: { readonly filename?: string | null } | null;
+  readonly paywall?: string | null;
   readonly hidden?: boolean | null;
   readonly hideAuthor?: boolean | null;
   readonly canonicalUrl?: string | null;
