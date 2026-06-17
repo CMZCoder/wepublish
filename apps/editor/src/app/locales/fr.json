@@ -1034,6 +1034,101 @@
       }
     },
     "no": "Non",
+    "publishReadiness": {
+      "title": "Intelligence de publication",
+      "description": "Utilise uniquement des signaux proxy déterministes. La qualité sémantique, la solidité factuelle et la probabilité de citation par l'IA nécessitent encore une revue humaine ou IA.",
+      "scoreLabel": "Score de publication",
+      "scoreShortLabel": "score",
+      "categoryProgress": "{{passed}} sur {{total}} validés",
+      "summary": {
+        "risk": "{{count}} risque",
+        "risks": "{{count}} risques",
+        "warning": "{{count}} avertissement",
+        "warnings": "{{count}} avertissements"
+      },
+      "status": {
+        "ready": "Prêt",
+        "review": "À vérifier",
+        "risky": "Risque"
+      },
+      "categories": {
+        "editorial": "Bases éditoriales",
+        "seo-social": "SEO & social",
+        "aeo": "Signaux proxy AEO",
+        "geo": "Signaux proxy GEO"
+      },
+      "checks": {
+        "slug": {
+          "pass": "Le slug est présent.",
+          "risk": "Le slug manque."
+        },
+        "title": {
+          "pass": "Le titre est présent.",
+          "risk": "Le titre manque ou est trop court."
+        },
+        "summary": {
+          "pass": "Le lead ou la description est présent.",
+          "risk": "Le lead ou la description manque."
+        },
+        "visible-author": {
+          "pass": "Le signal d'auteur visible est présent.",
+          "warning": "Un auteur existe mais il est masqué dans l'article.",
+          "risk": "L'auteur manque."
+        },
+        "tags": {
+          "pass": "Des tags sont présents.",
+          "warning": "Aucun tag n'est défini."
+        },
+        "image": {
+          "pass": "Un signal d'image est présent.",
+          "warning": "Aucune image principale ou de contenu n'a été trouvée."
+        },
+        "hidden": {
+          "pass": "Le contenu est découvrable par défaut.",
+          "warning": "Le contenu est masqué et peut être plus difficile à découvrir."
+        },
+        "seo-title-length": {
+          "pass": "La longueur du titre SEO est dans la plage cible.",
+          "warning": "Le titre SEO manque, est trop court ou trop long."
+        },
+        "description-length": {
+          "pass": "La longueur de la description est dans la plage cible.",
+          "warning": "La description manque, est trop courte ou trop longue."
+        },
+        "social-image": {
+          "pass": "L'image d'aperçu social est disponible.",
+          "warning": "L'image d'aperçu social manque."
+        },
+        "canonical-url": {
+          "pass": "L'URL canonique est vide ou valide.",
+          "warning": "L'URL canonique n'est pas une URL http(s) valide."
+        },
+        "opening-context-signals": {
+          "pass": "Le paragraphe d'ouverture a des signaux de contexte mesurables.",
+          "warning": "Le paragraphe d'ouverture a des signaux de contexte mesurables faibles."
+        },
+        "headings": {
+          "pass": "Des titres ou une structure de liste sont présents.",
+          "warning": "Aucun titre ou structure de liste n'a été trouvé."
+        },
+        "named-signals": {
+          "pass": "Le texte visible contient des noms, nombres ou signaux de date.",
+          "warning": "Le texte visible a peu de signaux mesurables d'entités, dates ou nombres."
+        },
+        "publish-date": {
+          "pass": "La date de publication est définie.",
+          "warning": "La date de publication n'est pas définie."
+        },
+        "source-links": {
+          "pass": "Des liens sources ou externes sont présents.",
+          "warning": "Aucun lien source ou externe n'a été trouvé."
+        },
+        "image-context": {
+          "pass": "Une légende ou un contexte d'image est présent.",
+          "warning": "La légende ou le contexte d'image manque."
+        }
+      }
+    },
     "pageEditor": {
       "validationFailedHeader": "Validation échouée",
       "validationFailedGeneric": "Impossible de sauvegarder. Corrigez les erreurs signalées.",

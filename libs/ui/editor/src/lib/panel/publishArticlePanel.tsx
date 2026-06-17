@@ -10,12 +10,15 @@ import {
   DescriptionListItemWithMessage,
   InfoColor,
 } from '../atoms';
+import { BlockValue } from '../blocks/types';
 import { ArticleMetadata } from './articleMetadataPanel';
+import { PublishReadinessPanel } from './publishReadinessPanel';
 
 export interface PublishArticlePanelProps {
   publishedAtDate?: Date;
   firstPublishedAtDate?: Date;
   metadata: ArticleMetadata;
+  blocks?: readonly BlockValue[];
 
   onClose(): void;
   onConfirm(publishedAt: Date): void;
@@ -25,6 +28,7 @@ function PublishArticlePanel({
   publishedAtDate,
   firstPublishedAtDate,
   metadata,
+  blocks,
   onClose,
   onConfirm,
 }: PublishArticlePanelProps) {
@@ -72,6 +76,15 @@ function PublishArticlePanel({
             })
           : t('articleEditor.panels.notPublishedYet')}
         </div>
+
+        <PublishReadinessPanel
+          input={{
+            type: 'article',
+            metadata,
+            blocks,
+            publishedAt,
+          }}
+        />
 
         <DescriptionList>
           <DescriptionListItem label={t('articleEditor.panels.url')}>
@@ -198,7 +211,9 @@ function PublishArticlePanel({
         <Button
           appearance="primary"
           disabled={!publishedAt || !metadata.slug}
-          onClick={() => onConfirm(publishedAt!)}
+          onClick={() => {
+            if (publishedAt) onConfirm(publishedAt);
+          }}
         >
           {t('articleEditor.panels.confirm')}
         </Button>

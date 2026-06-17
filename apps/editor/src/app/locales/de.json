@@ -1044,6 +1044,101 @@
       }
     },
     "no": "Nein",
+    "publishReadiness": {
+      "title": "Publikations-Intelligenz",
+      "description": "Verwendet nur deterministische Proxy-Signale. Semantische Qualität, faktische Stärke und KI-Zitierwahrscheinlichkeit benötigen weiterhin menschliche oder KI-Prüfung.",
+      "scoreLabel": "Publikations-Score",
+      "scoreShortLabel": "Score",
+      "categoryProgress": "{{passed}} von {{total}} bestanden",
+      "summary": {
+        "risk": "{{count}} Risiko",
+        "risks": "{{count}} Risiken",
+        "warning": "{{count}} Hinweis",
+        "warnings": "{{count}} Hinweise"
+      },
+      "status": {
+        "ready": "Bereit",
+        "review": "Prüfen",
+        "risky": "Riskant"
+      },
+      "categories": {
+        "editorial": "Redaktionelle Grundlagen",
+        "seo-social": "SEO & Social",
+        "aeo": "AEO-Proxy-Signale",
+        "geo": "GEO-Proxy-Signale"
+      },
+      "checks": {
+        "slug": {
+          "pass": "Slug ist vorhanden.",
+          "risk": "Slug fehlt."
+        },
+        "title": {
+          "pass": "Titel ist vorhanden.",
+          "risk": "Titel fehlt oder ist zu kurz."
+        },
+        "summary": {
+          "pass": "Lead oder Beschreibung ist vorhanden.",
+          "risk": "Lead oder Beschreibung fehlt."
+        },
+        "visible-author": {
+          "pass": "Sichtbares Autor*innen-Signal ist vorhanden.",
+          "warning": "Autor*in ist vorhanden, aber im Artikel ausgeblendet.",
+          "risk": "Autor*in fehlt."
+        },
+        "tags": {
+          "pass": "Tags sind vorhanden.",
+          "warning": "Keine Tags gesetzt."
+        },
+        "image": {
+          "pass": "Bildsignal ist vorhanden.",
+          "warning": "Kein Haupt- oder Inhaltsbild gefunden."
+        },
+        "hidden": {
+          "pass": "Inhalt ist standardmäßig auffindbar.",
+          "warning": "Inhalt ist ausgeblendet und dadurch schwerer auffindbar."
+        },
+        "seo-title-length": {
+          "pass": "SEO-Titellänge liegt im Zielbereich.",
+          "warning": "SEO-Titel fehlt, ist zu kurz oder zu lang."
+        },
+        "description-length": {
+          "pass": "Beschreibungslänge liegt im Zielbereich.",
+          "warning": "Beschreibung fehlt, ist zu kurz oder zu lang."
+        },
+        "social-image": {
+          "pass": "Bild für Social Preview ist verfügbar.",
+          "warning": "Bild für Social Preview fehlt."
+        },
+        "canonical-url": {
+          "pass": "Kanonische URL ist leer oder gültig.",
+          "warning": "Kanonische URL ist keine gültige http(s)-URL."
+        },
+        "opening-context-signals": {
+          "pass": "Einstiegsabsatz hat messbare Kontextsignale.",
+          "warning": "Einstiegsabsatz hat schwache messbare Kontextsignale."
+        },
+        "headings": {
+          "pass": "Überschriften oder Listenstruktur sind vorhanden.",
+          "warning": "Keine Überschriften- oder Listenstruktur gefunden."
+        },
+        "named-signals": {
+          "pass": "Sichtbarer Text enthält Namen, Zahlen oder datumsähnliche Signale.",
+          "warning": "Sichtbarer Text hat wenige messbare Entitäts-, Datums- oder Zahlensignale."
+        },
+        "publish-date": {
+          "pass": "Publikationsdatum ist gesetzt.",
+          "warning": "Publikationsdatum ist nicht gesetzt."
+        },
+        "source-links": {
+          "pass": "Quellen- oder externe Links sind vorhanden.",
+          "warning": "Keine Quellen- oder externen Links gefunden."
+        },
+        "image-context": {
+          "pass": "Bildlegende oder Bildkontext ist vorhanden.",
+          "warning": "Bildlegende oder Bildkontext fehlt."
+        }
+      }
+    },
     "pageEditor": {
       "validationFailedHeader": "Validierung fehlgeschlagen",
       "validationFailedGeneric": "Speichern nicht möglich. Bitte prüfe die markierten Fehler.",

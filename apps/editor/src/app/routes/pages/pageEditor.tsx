@@ -576,6 +576,7 @@ function PageEditor() {
         <PublishPagePanel
           publishedAtDate={publishedAt}
           metadata={metadata}
+          blocks={blocks}
           onClose={() => setPublishDialogOpen(false)}
           onConfirm={publishedAt => {
             handlePublish(publishedAt);
