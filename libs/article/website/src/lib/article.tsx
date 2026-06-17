@@ -11,6 +11,10 @@ import { ContentWrapper } from '@wepublish/content/website';
 import { ArticleTrackingPixels } from './article-tracking-pixels';
 import { Paywall } from '@wepublish/website/builder';
 import { css, SerializedStyles } from '@emotion/react';
+import {
+  hasPaywalledArticleContent,
+  paywalledContentClassName,
+} from './article-seo';
 
 export const ArticleInfoWrapper = styled('aside')`
   display: grid;
@@ -29,41 +33,39 @@ export const defaultFadeoutStyles = css`
   );
 `;
 
-export const ArticleWrapper = styled(ContentWrapper)<{
-  hideContent?: boolean;
-  hideContentAfter?: number;
-  fadeout?: boolean;
-  fadeoutStyles?: SerializedStyles;
-}>`
-  ${({
-    hideContent,
-    fadeoutStyles = defaultFadeoutStyles,
-    hideContentAfter = 3,
-    fadeout,
-  }) =>
-    hideContent &&
-    css`
-      // Shows the first N blocks (usually title, image, richtext) and hides the rest
-      > :nth-child(n + ${hideContentAfter + 1}):not(
-          :is(${ArticleInfoWrapper})
-        ) {
-        display: none;
-      }
-
-      ${fadeout &&
-      css`
-        // fade out the third block (usually richtext) to indicate the user that a paywall is hitting.
-        > :nth-child(${hideContentAfter}) {
-          ${fadeoutStyles}
-        }
-      `}
-    `}
-
+export const ArticleWrapper = styled(ContentWrapper)`
   ${({ theme }) => theme.breakpoints.up('md')} {
     & > :is(${ArticleListWrapper}, ${CommentListWrapper}) {
       grid-column: 2/12;
     }
   }
+`;
+
+export const ArticlePublicContentWrapper = styled('div')<{
+  fadeout?: boolean;
+  fadeoutStyles?: SerializedStyles;
+}>`
+  display: contents;
+
+  ${({ fadeout, fadeoutStyles = defaultFadeoutStyles }) =>
+    fadeout &&
+    css`
+      > :last-child {
+        ${fadeoutStyles}
+      }
+    `}
+`;
+
+export const ArticlePaywalledContentWrapper = styled('section')<{
+  hideContent?: boolean;
+}>`
+  display: contents;
+
+  ${({ hideContent }) =>
+    hideContent &&
+    css`
+      display: none;
+    `}
 `;
 
 export function Article({
@@ -83,22 +85,55 @@ export function Article({
   } = useWebsiteBuilder();
 
   const article = data?.article as ArticleType | undefined;
+  const blocks = (article?.latest.blocks as BlockContent[] | undefined) ?? [];
+  const hasPaywalledContent =
+    article ? hasPaywalledArticleContent(article) : false;
+  const hideContentAfter = Math.max(article?.paywall?.hideContentAfter ?? 0, 0);
+  const publicBlocks =
+    hasPaywalledContent ? blocks.slice(0, hideContentAfter) : blocks;
+  const paywalledBlocks =
+    hasPaywalledContent ? blocks.slice(hideContentAfter) : [];
+  const fadeoutPublicContent =
+    !!hideContent &&
+    !!article?.paywall?.fadeout &&
+    hasPaywalledContent &&
+    publicBlocks.length > 0;
 
   return (
-    <ArticleWrapper
-      className={className}
-      hideContent={hideContent}
-      hideContentAfter={article?.paywall?.hideContentAfter}
-      fadeout={article?.paywall?.fadeout}
-    >
+    <ArticleWrapper className={className}>
       {article && <ArticleSEO article={article} />}
 
-      {article && (
+      {article && !hasPaywalledContent && (
         <Blocks
           key={article.id}
-          blocks={(article.latest.blocks as BlockContent[]) ?? []}
+          blocks={blocks}
           type="Article"
         />
+      )}
+
+      {article && hasPaywalledContent && (
+        <>
+          {publicBlocks.length > 0 && (
+            <ArticlePublicContentWrapper fadeout={fadeoutPublicContent}>
+              <Blocks
+                key={`${article.id}-public`}
+                blocks={publicBlocks}
+                type="Article"
+              />
+            </ArticlePublicContentWrapper>
+          )}
+
+          <ArticlePaywalledContentWrapper
+            className={paywalledContentClassName}
+            hideContent={hideContent}
+          >
+            <Blocks
+              key={`${article.id}-paywalled`}
+              blocks={paywalledBlocks}
+              type="Article"
+            />
+          </ArticlePaywalledContentWrapper>
+        </>
       )}
 
       <ArticleInfoWrapper>

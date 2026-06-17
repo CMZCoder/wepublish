@@ -11,10 +11,22 @@ import {
 } from '@wepublish/website/builder';
 import { Fragment, useMemo } from 'react';
 
+export const paywalledContentClassName = 'wepublish-paywalled-content';
+export const paywalledContentSelector = `.${paywalledContentClassName}`;
+
+export const hasPaywalledArticleContent = (article: Article) => {
+  const blocks = article.latest.blocks ?? [];
+  const paywall = article.paywall;
+  const hideContentAfter = Math.max(paywall?.hideContentAfter ?? 0, 0);
+
+  return !!paywall?.active && blocks.length > hideContentAfter;
+};
+
 export const getArticleSEO = (article: Article) => {
   const firstTitle = article.latest.blocks?.find(isTitleBlock);
   const firstRichText = article.latest.blocks?.find(isRichTextBlock);
   const firstImageBlock = article.latest.blocks?.find(isImageBlock);
+  const paywalledArticleContent = hasPaywalledArticleContent(article);
 
   const articleBody = article.latest.blocks
     ?.filter(isRichTextBlock)
@@ -99,6 +111,14 @@ export const getArticleSEO = (article: Article) => {
       headline,
       identifier: article.slug,
       url,
+      ...(paywalledArticleContent && {
+        isAccessibleForFree: false,
+        hasPart: {
+          '@type': 'WebPageElement',
+          isAccessibleForFree: false,
+          cssSelector: paywalledContentSelector,
+        },
+      }),
     },
     noIndex: !!article.hidden,
   };

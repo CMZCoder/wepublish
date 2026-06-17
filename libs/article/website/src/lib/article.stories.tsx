@@ -1,13 +1,61 @@
 import { ApolloError } from '@apollo/client';
 import { Meta } from '@storybook/react';
 import { Article } from './article';
-import { mockArticle, mockArticleRevision } from '@wepublish/storybook/mocks';
+import {
+  mockArticle,
+  mockArticleRevision,
+  mockBlockContent,
+} from '@wepublish/storybook/mocks';
 import {
   WithPollBlockDecorators,
   WithSubscribeBlockDecorators,
 } from '@wepublish/storybook';
+import { FullPaywallFragment } from '@wepublish/website/api';
 
 const article = mockArticle();
+
+const activePaywall: FullPaywallFragment = {
+  __typename: 'Paywall',
+  id: 'paywall-1',
+  active: true,
+  anyMemberPlan: false,
+  name: 'Member-only reporting',
+  description: [],
+  circumventDescription: [],
+  alternativeSubscribeUrl: null,
+  upgradeDescription: [],
+  upgradeCircumventDescription: [],
+  memberPlans: [],
+  bypasses: [],
+  fadeout: true,
+  hideContentAfter: 3,
+};
+
+const paywalledArticle = mockArticle({
+  latest: mockArticleRevision({
+    blocks: mockBlockContent({
+      event: null,
+      html: null,
+      comment: null,
+      bildwurf: null,
+      facebookPost: null,
+      facebookVideo: null,
+      instagramPost: null,
+      tiktokVideo: null,
+      youtubeVideo: null,
+      soundCloud: null,
+      twitter: null,
+      polisConversation: null,
+      iframe: null,
+      imageGallery: null,
+      teaserList: null,
+      col6: null,
+      col1: null,
+      flex: null,
+      slots: null,
+    }),
+  }),
+});
 
 export default {
   component: Article,
@@ -92,5 +140,18 @@ export const WithoutImageMetadata = {
         }),
       }),
     },
+  },
+};
+
+export const WithPaywalledContent = {
+  args: {
+    data: {
+      article: {
+        ...paywalledArticle,
+        paywall: activePaywall,
+      },
+    },
+    showPaywall: true,
+    hideContent: true,
   },
 };
