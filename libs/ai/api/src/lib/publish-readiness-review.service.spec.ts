@@ -61,6 +61,28 @@ describe('PublishReadinessReviewService', () => {
     expect(result.suggestions[0].category).toBe('lead');
   });
 
+  it('uses the concrete model returned by a fallback provider result', async () => {
+    const provider: PublishReadinessReviewProvider = {
+      name: 'unlimited-surf',
+      model: 'claude-sonnet-4-6-20260101',
+      review: jest.fn().mockResolvedValue({
+        model: 'gpt-5.5',
+        content: JSON.stringify({
+          summary: 'Fallback helper reviewed this article.',
+          suggestions: [],
+          warnings: [],
+        }),
+      }),
+    };
+
+    const service = new PublishReadinessReviewService(provider);
+    const result = await service.review(input);
+
+    expect(result.provider).toBe('unlimited-surf');
+    expect(result.model).toBe('gpt-5.5');
+    expect(result.summary).toBe('Fallback helper reviewed this article.');
+  });
+
   it('rejects invalid provider output', async () => {
     const provider: PublishReadinessReviewProvider = {
       name: 'test',

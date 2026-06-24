@@ -5,7 +5,10 @@ import type {
   PublishReadinessReviewInput,
 } from './publish-readiness-review.model';
 import { parsePublishReadinessReview } from './publish-readiness-review.parser';
-import type { PublishReadinessReviewProvider } from './publish-readiness-review.provider';
+import type {
+  PublishReadinessReviewProvider,
+  PublishReadinessReviewProviderResult,
+} from './publish-readiness-review.provider';
 import { buildPublishReadinessReviewPrompt } from './publish-readiness-review.prompt';
 
 @Injectable()
@@ -15,16 +18,28 @@ export class PublishReadinessReviewService {
   async review(
     input: PublishReadinessReviewInput
   ): Promise<PublishReadinessReview> {
-    const raw = await this.provider.review(
-      input,
-      buildPublishReadinessReviewPrompt(input)
+    const result = normalizeProviderResult(
+      await this.provider.review(
+        input,
+        buildPublishReadinessReviewPrompt(input)
+      )
     );
-    const parsed = parsePublishReadinessReview(raw);
+    const parsed = parsePublishReadinessReview(result.content);
 
     return {
       provider: this.provider.name,
-      model: this.provider.model,
+      model: result.model ?? this.provider.model,
       ...parsed,
     };
   }
+}
+
+function normalizeProviderResult(
+  result: string | PublishReadinessReviewProviderResult
+): PublishReadinessReviewProviderResult {
+  if (typeof result === 'string') {
+    return { content: result };
+  }
+
+  return result;
 }

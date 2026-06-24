@@ -570,7 +570,7 @@ function PageEditor() {
 
       <Modal
         open={isPublishDialogOpen}
-        size="sm"
+        size="lg"
         onClose={() => setPublishDialogOpen(false)}
       >
         <PublishPagePanel

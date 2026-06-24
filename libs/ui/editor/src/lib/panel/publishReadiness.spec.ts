@@ -54,7 +54,7 @@ describe('getPublishReadiness', () => {
     expect(getCheck(result, 'opening-context-signals').status).toBe('warning');
   });
 
-  it('uses observable metadata and block proxy signals for article readiness', () => {
+  it('uses observable metadata and block structure for article readiness', () => {
     const input: PublishReadinessInput = {
       type: 'article',
       publishedAt: new Date('2026-06-17T10:00:00.000Z'),

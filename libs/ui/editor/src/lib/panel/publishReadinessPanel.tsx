@@ -30,9 +30,10 @@ export interface PublishReadinessPanelProps {
   readonly input?: PublishReadinessInput;
   readonly result?: PublishReadinessResult;
   readonly aiReview?: PublishReadinessAIReviewController;
+  readonly variant?: 'card' | 'embedded';
 }
 
-const Root = styled.section`
+const Root = styled.section<{ $variant: 'card' | 'embedded' }>`
   background:
     linear-gradient(
       135deg,
@@ -40,17 +41,28 @@ const Root = styled.section`
       transparent 38%
     ),
     ${({ theme }) => theme.palette.background.paper};
-  border: 1px solid ${({ theme }) => theme.palette.divider};
-  border-radius: 8px;
-  box-shadow: 0 10px 28px rgb(26 126 224 / 7%);
+  border: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? '0' : `1px solid ${theme.palette.divider}`};
+  border-radius: ${({ $variant }) => ($variant === 'embedded' ? '0' : '8px')};
+  box-shadow: ${({ $variant }) =>
+    $variant === 'embedded' ? 'none' : '0 10px 28px rgb(26 126 224 / 7%)'};
   container-type: inline-size;
-  margin: 20px 0;
-  overflow: hidden;
+  margin: ${({ $variant }) => ($variant === 'embedded' ? '0' : '20px 0')};
+  overflow: ${({ $variant }) =>
+    $variant === 'embedded' ? 'visible' : 'hidden'};
 `;
 
-const Header = styled.div`
+const Header = styled.div<{ $variant: 'card' | 'embedded' }>`
   align-items: flex-start;
   border-bottom: 1px solid ${({ theme }) => theme.palette.divider};
+  border-left: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? `1px solid ${theme.palette.divider}` : '0'};
+  border-radius: ${({ $variant }) =>
+    $variant === 'embedded' ? '8px 8px 0 0' : 0};
+  border-right: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? `1px solid ${theme.palette.divider}` : '0'};
+  border-top: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? `1px solid ${theme.palette.divider}` : '0'};
   display: flex;
   gap: 16px;
   justify-content: space-between;
@@ -187,7 +199,17 @@ const ScoreMeter = styled.div<{ status: PublishReadinessStatus }>`
   }
 `;
 
-const Body = styled.div`
+const Body = styled.div<{ $variant: 'card' | 'embedded' }>`
+  background: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? theme.palette.background.paper : 'transparent'};
+  border-bottom: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? `1px solid ${theme.palette.divider}` : '0'};
+  border-left: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? `1px solid ${theme.palette.divider}` : '0'};
+  border-radius: ${({ $variant }) =>
+    $variant === 'embedded' ? '0 0 8px 8px' : 0};
+  border-right: ${({ theme, $variant }) =>
+    $variant === 'embedded' ? `1px solid ${theme.palette.divider}` : '0'};
   display: grid;
   gap: 12px;
   padding: 14px 16px 16px;
@@ -290,89 +312,11 @@ const CATEGORY_ORDER: PublishReadinessCategory[] = [
   'geo',
 ];
 
-const CATEGORY_DEFAULTS: Record<PublishReadinessCategory, string> = {
-  editorial: 'Editorial basics',
-  'seo-social': 'SEO & social',
-  aeo: 'AEO proxy signals',
-  geo: 'GEO proxy signals',
-};
-
-const CHECK_DEFAULTS: Record<string, Record<string, string>> = {
-  slug: {
-    pass: 'Slug is present.',
-    risk: 'Slug is missing.',
-  },
-  title: {
-    pass: 'Title is present.',
-    risk: 'Title is missing or too short.',
-  },
-  summary: {
-    pass: 'Lead or description is present.',
-    risk: 'Lead or description is missing.',
-  },
-  'visible-author': {
-    pass: 'Visible author signal is present.',
-    warning: 'Author exists but is hidden from the visible article.',
-    risk: 'Author is missing.',
-  },
-  tags: {
-    pass: 'Tags are present.',
-    warning: 'No tags are set.',
-  },
-  image: {
-    pass: 'Image signal is present.',
-    warning: 'No main or content image was found.',
-  },
-  hidden: {
-    pass: 'Content is discoverable by default.',
-    warning: 'Content is hidden and may be harder to discover.',
-  },
-  'seo-title-length': {
-    pass: 'SEO title length is within the target range.',
-    warning: 'SEO title is missing, short, or long.',
-  },
-  'description-length': {
-    pass: 'Description length is within the target range.',
-    warning: 'Description is missing, short, or long.',
-  },
-  'social-image': {
-    pass: 'Social preview image is available.',
-    warning: 'Social preview image is missing.',
-  },
-  'canonical-url': {
-    pass: 'Canonical URL is empty or valid.',
-    warning: 'Canonical URL is not a valid http(s) URL.',
-  },
-  'opening-context-signals': {
-    pass: 'Opening paragraph has measurable context signals.',
-    warning: 'Opening paragraph has weak measurable context signals.',
-  },
-  headings: {
-    pass: 'Headings or list structure are present.',
-    warning: 'No heading or list structure was found.',
-  },
-  'named-signals': {
-    pass: 'Visible text contains names, numbers, or date-like signals.',
-    warning: 'Visible text has few measurable entity/date/number signals.',
-  },
-  'publish-date': {
-    pass: 'Publish date is set.',
-    warning: 'Publish date is not set.',
-  },
-  'source-links': {
-    pass: 'Source or external links are present.',
-    warning: 'No source or external links were found.',
-  },
-  'image-context': {
-    pass: 'Image caption/context is present.',
-    warning: 'Image caption/context is missing.',
-  },
-};
-
 export function PublishReadinessPanel({
   input,
   result,
   aiReview,
+  variant = 'card',
 }: PublishReadinessPanelProps) {
   const { t } = useTranslation();
   const readiness = useMemo(
@@ -397,44 +341,32 @@ export function PublishReadinessPanel({
 
   return (
     <Root
-      aria-label={t('publishReadiness.title', {
-        defaultValue: 'Publish Intelligence',
-      })}
+      data-publish-readiness-panel
+      $variant={variant}
+      aria-label={t('publishReadiness.title')}
     >
-      <Header>
+      <Header $variant={variant}>
         <HeadingGroup>
           <TitleIcon aria-hidden="true">
             <MdFactCheck />
           </TitleIcon>
           <div>
-            <Title>
-              {t('publishReadiness.title', {
-                defaultValue: 'Publish Intelligence',
-              })}
-            </Title>
+            <Title>{t('publishReadiness.title')}</Title>
             <HeaderMeta>
               <Status status={readiness.status}>
                 {getStatusIcon(readiness.status)}
-                {t(`publishReadiness.status.${readiness.status}`, {
-                  defaultValue: getStatusLabel(readiness.status),
-                })}
+                {t(`publishReadiness.status.${readiness.status}`)}
               </Status>
               <SummaryPill>
                 <MdReportProblem aria-hidden="true" />
                 {t(riskSummaryKey, {
                   count: totals.risks,
-                  defaultValue: `${totals.risks} ${
-                    totals.risks === 1 ? 'risk' : 'risks'
-                  }`,
                 })}
               </SummaryPill>
               <SummaryPill>
                 <MdInfoOutline aria-hidden="true" />
                 {t(warningSummaryKey, {
                   count: totals.warnings,
-                  defaultValue: `${totals.warnings} ${
-                    totals.warnings === 1 ? 'warning' : 'warnings'
-                  }`,
                 })}
               </SummaryPill>
             </HeaderMeta>
@@ -442,9 +374,7 @@ export function PublishReadinessPanel({
         </HeadingGroup>
         <ScoreMeter
           role="meter"
-          aria-label={t('publishReadiness.scoreLabel', {
-            defaultValue: 'Publish score',
-          })}
+          aria-label={t('publishReadiness.scoreLabel')}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={readiness.score}
@@ -453,22 +383,13 @@ export function PublishReadinessPanel({
         >
           <span>
             {readiness.score}%
-            <small>
-              {t('publishReadiness.scoreShortLabel', {
-                defaultValue: 'score',
-              })}
-            </small>
+            <small>{t('publishReadiness.scoreShortLabel')}</small>
           </span>
         </ScoreMeter>
       </Header>
 
-      <Body>
-        <Description>
-          {t('publishReadiness.description', {
-            defaultValue:
-              'Uses deterministic proxy signals only. Semantic quality, factual strength and AI citation likelihood still need human or AI review.',
-          })}
-        </Description>
+      <Body $variant={variant}>
+        <Description>{t('publishReadiness.description')}</Description>
 
         <PublishDiscoveryMap
           input={input}
@@ -489,15 +410,12 @@ export function PublishReadinessPanel({
               <Category key={category}>
                 <CategoryHeader>
                   <CategoryTitle>
-                    {t(`publishReadiness.categories.${category}`, {
-                      defaultValue: CATEGORY_DEFAULTS[category],
-                    })}
+                    {t(`publishReadiness.categories.${category}`)}
                   </CategoryTitle>
                   <CategoryProgress>
                     {t('publishReadiness.categoryProgress', {
                       passed: summary.passed,
                       total: summary.total,
-                      defaultValue: `${summary.passed} of ${summary.total} passed`,
                     })}
                   </CategoryProgress>
                 </CategoryHeader>
@@ -509,12 +427,7 @@ export function PublishReadinessPanel({
                       </CheckIcon>
                       <CheckText>
                         {t(
-                          `publishReadiness.checks.${check.id}.${check.status}`,
-                          {
-                            defaultValue:
-                              CHECK_DEFAULTS[check.id]?.[check.status] ??
-                              check.id,
-                          }
+                          `publishReadiness.checks.${check.id}.${check.status}`
                         )}
                       </CheckText>
                     </CheckItem>
@@ -529,17 +442,6 @@ export function PublishReadinessPanel({
       </Body>
     </Root>
   );
-}
-
-function getStatusLabel(status: PublishReadinessStatus): string {
-  switch (status) {
-    case 'ready':
-      return 'Ready';
-    case 'review':
-      return 'Needs review';
-    case 'risky':
-      return 'Risky';
-  }
 }
 
 function getStatusTone(status: PublishReadinessStatus, theme: Theme) {

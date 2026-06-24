@@ -1036,12 +1036,39 @@
     "no": "Non",
     "publishReadiness": {
       "title": "Intelligence de publication",
-      "description": "Utilise uniquement des signaux proxy déterministes. La qualité sémantique, la solidité factuelle et la probabilité de citation par l'IA nécessitent encore une revue humaine ou IA.",
+      "description": "Des contrôles automatiques signalent les métadonnées, la clarté d'ouverture, les sources et les réglages d'accès avant la dernière revue éditoriale.",
+      "aiReview": {
+        "title": "Revue IA",
+        "description": "Repères éditoriaux pour la recherche, les moteurs de réponse et les sources citables.",
+        "warningsLabel": "Avertissements de la revue IA",
+        "loading": "Préparation des repères éditoriaux.",
+        "errorFallback": "Impossible de générer les repères éditoriaux. La checklist de publication reste disponible.",
+        "unavailableFallback": "Configurez un fournisseur IA pour lancer les suggestions éditoriales.",
+        "empty": "Aucun repère éditorial supplémentaire trouvé. La checklist de publication reste disponible.",
+        "currentValue": "Actuel : {{value}}",
+        "confidence": "Confiance : {{value}}",
+        "actions": {
+          "run": "Lancer la revue IA",
+          "retry": "Réessayer la revue IA",
+          "reviewing": "Revue en cours"
+        },
+        "categories": {
+          "lead": "Lead et réponse",
+          "seo-social": "SEO et social",
+          "aeo-geo": "Clarté AEO/GEO",
+          "editorial-risk": "Risques éditoriaux"
+        },
+        "confidenceValues": {
+          "low": "faible",
+          "medium": "moyenne",
+          "high": "élevée"
+        }
+      },
       "discovery": {
         "title": "Carte de découvrabilité",
-        "description": "Montre comment les signaux observables soutiennent les extraits de recherche, les réponses, les traces de citation et la clarté d'accès.",
-        "signalProgress": "{{ready}} sur {{total}} signaux prêts",
-        "noSignals": "Aucun signal disponible pour cette surface.",
+        "description": "Indique si le titre, l'introduction, les sources et les réglages d'accès sont prêts pour la publication.",
+        "signalProgress": "{{ready}} sur {{total}} vérifications prêtes",
+        "noSignals": "Aucune vérification disponible pour cette zone.",
         "state": {
           "ready": "Prêt",
           "review": "À travailler",
@@ -1052,10 +1079,10 @@
             "title": "Aperçu recherche"
           },
           "answers": {
-            "title": "Préparation aux réponses"
+            "title": "Clarté d'ouverture"
           },
           "citations": {
-            "title": "Trace de citation IA"
+            "title": "Sources"
           },
           "access": {
             "title": "Modèle d'accès"
@@ -1091,8 +1118,8 @@
       "categories": {
         "editorial": "Bases éditoriales",
         "seo-social": "SEO & social",
-        "aeo": "Signaux proxy AEO",
-        "geo": "Signaux proxy GEO"
+        "aeo": "Préparation AEO",
+        "geo": "Préparation GEO"
       },
       "checks": {
         "slug": {
@@ -1108,7 +1135,7 @@
           "risk": "Le lead ou la description manque."
         },
         "visible-author": {
-          "pass": "Le signal d'auteur visible est présent.",
+          "pass": "L'auteur est visible.",
           "warning": "Un auteur existe mais il est masqué dans l'article.",
           "risk": "L'auteur manque."
         },
@@ -1117,7 +1144,7 @@
           "warning": "Aucun tag n'est défini."
         },
         "image": {
-          "pass": "Un signal d'image est présent.",
+          "pass": "Une image est disponible.",
           "warning": "Aucune image principale ou de contenu n'a été trouvée."
         },
         "hidden": {
@@ -1141,16 +1168,16 @@
           "warning": "L'URL canonique n'est pas une URL http(s) valide."
         },
         "opening-context-signals": {
-          "pass": "Le paragraphe d'ouverture a des signaux de contexte mesurables.",
-          "warning": "Le paragraphe d'ouverture a des signaux de contexte mesurables faibles."
+          "pass": "Le paragraphe d'ouverture donne un contexte concret.",
+          "warning": "Le paragraphe d'ouverture a besoin d'un contexte plus concret."
         },
         "headings": {
           "pass": "Des titres ou une structure de liste sont présents.",
           "warning": "Aucun titre ou structure de liste n'a été trouvé."
         },
         "named-signals": {
-          "pass": "Le texte visible contient des noms, nombres ou signaux de date.",
-          "warning": "Le texte visible a peu de signaux mesurables d'entités, dates ou nombres."
+          "pass": "Le texte visible contient des noms, nombres ou dates.",
+          "warning": "Le texte visible pourrait utiliser plus de noms, dates ou nombres."
         },
         "publish-date": {
           "pass": "La date de publication est définie.",

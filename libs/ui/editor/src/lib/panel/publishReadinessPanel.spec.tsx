@@ -26,10 +26,37 @@ jest.mock('@wepublish/editor/api', () => ({
 }));
 
 jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (_key: string, options?: { defaultValue?: string }) =>
-      options?.defaultValue ?? _key,
-  }),
+  useTranslation: () => {
+    const en = jest.requireActual(
+      `${process.cwd()}/apps/editor/src/app/locales/en.json`
+    );
+
+    function readTranslation(key: string) {
+      return key
+        .split('.')
+        .reduce<unknown>(
+          (value, segment) =>
+            value && typeof value === 'object' ?
+              (value as Record<string, unknown>)[segment]
+            : undefined,
+          en.translation
+        );
+    }
+
+    function interpolate(value: string, options?: Record<string, unknown>) {
+      return value.replace(/{{\s*(\w+)\s*}}/g, (_match, name: string) =>
+        String(options?.[name] ?? '')
+      );
+    }
+
+    return {
+      t: (key: string, options?: Record<string, unknown>) => {
+        const value = readTranslation(key);
+
+        return typeof value === 'string' ? interpolate(value, options) : key;
+      },
+    };
+  },
 }));
 
 const testTheme = createTheme();
@@ -47,7 +74,7 @@ describe('PublishReadinessPanel', () => {
     ]);
   });
 
-  it('renders the readiness score and deterministic proxy disclaimer', () => {
+  it('renders the readiness score and editor-facing review disclaimer', () => {
     render(
       <PublishReadinessPanel
         result={{
@@ -72,11 +99,39 @@ describe('PublishReadinessPanel', () => {
     expect(screen.getByText('Publish Intelligence')).toBeInTheDocument();
     expect(screen.getByText('74%')).toBeInTheDocument();
     expect(
-      screen.getByText(/deterministic proxy signals/i)
+      screen.getByText(/automatic checks highlight metadata/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Opening paragraph has weak measurable context signals/i)
+      screen.queryByText(/deterministic proxy signals/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Opening paragraph needs more concrete context/i)
     ).toBeInTheDocument();
+  });
+
+  it('can render as an embedded modal section without an extra card wrapper', () => {
+    const { container } = render(
+      <PublishReadinessPanel
+        variant="embedded"
+        result={{
+          status: 'review',
+          score: 74,
+          checks: [
+            {
+              id: 'slug',
+              category: 'editorial',
+              status: 'pass',
+            },
+          ],
+        }}
+      />
+    );
+
+    const panel = container.querySelector('[data-publish-readiness-panel]');
+
+    expect(panel).toBeInTheDocument();
+    expect(panel).toHaveStyle({ boxShadow: 'none' });
+    expect(panel).toHaveStyle({ margin: '0px' });
   });
 
   it('exposes an accessible score meter and category progress summaries', () => {
@@ -297,10 +352,12 @@ describe('PublishReadinessPanel', () => {
 
     expect(screen.getByText('Discovery map')).toBeInTheDocument();
     expect(screen.getByText('Search preview')).toBeInTheDocument();
-    expect(screen.getByText('Answer readiness')).toBeInTheDocument();
-    expect(screen.getByText('AI citation trail')).toBeInTheDocument();
+    expect(screen.getByText('Opening clarity')).toBeInTheDocument();
+    expect(screen.getByText('Source trail')).toBeInTheDocument();
     expect(screen.getByText('Access model')).toBeInTheDocument();
     expect(screen.getByText('Paywalled article')).toBeInTheDocument();
+    expect(screen.queryByText(/answer surfaces/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/answer readiness/i)).not.toBeInTheDocument();
   });
 
   it('keeps discovery map status markers readable on their color backgrounds', () => {
@@ -342,11 +399,7 @@ describe('PublishReadinessPanel', () => {
       />
     );
 
-    for (const label of [
-      'Search preview',
-      'AI citation trail',
-      'Access model',
-    ]) {
+    for (const label of ['Search preview', 'Source trail', 'Access model']) {
       expect(
         getContrastRatio(getDiscoveryStatusMarker(label))
       ).toBeGreaterThanOrEqual(4.5);

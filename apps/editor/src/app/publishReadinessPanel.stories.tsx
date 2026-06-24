@@ -186,7 +186,7 @@ const aiSuggestions: PublishReadinessAIReviewController = {
 const aiError: PublishReadinessAIReviewController = {
   state: 'error',
   message:
-    'Local AI provider is unavailable. Deterministic checks remain available.',
+    'Local AI provider is unavailable. You can continue with the readiness checklist.',
 };
 
 const aiUnavailable: PublishReadinessAIReviewController = {

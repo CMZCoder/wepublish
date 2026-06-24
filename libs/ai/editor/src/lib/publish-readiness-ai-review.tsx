@@ -8,6 +8,7 @@ import {
   MdReplay,
   MdWarningAmber,
 } from 'react-icons/md';
+import { useTranslation } from 'react-i18next';
 
 export type AIReviewState =
   | 'unavailable'
@@ -44,13 +45,6 @@ export interface PublishReadinessAIReviewController {
 export interface PublishReadinessAIReviewProps {
   readonly controller: PublishReadinessAIReviewController;
 }
-
-const CATEGORY_LABELS: Record<AIReviewSuggestionCategory, string> = {
-  lead: 'Lead and answer',
-  'seo-social': 'SEO and social',
-  'aeo-geo': 'AEO/GEO clarity',
-  'editorial-risk': 'Editorial risks',
-};
 
 const CATEGORY_ORDER: AIReviewSuggestionCategory[] = [
   'lead',
@@ -144,17 +138,17 @@ const ActionButton = styled(Button)`
 const StatusText = styled.p<{ tone?: 'error' | 'warning' }>`
   align-items: flex-start;
   background: ${({ theme, tone }) =>
-    tone === 'error' ? theme.palette.error.light
+    tone === 'error' ? '#fff5f5'
     : tone === 'warning' ? theme.palette.warning.light
     : theme.palette.grey[50]};
   border: 1px solid
     ${({ theme, tone }) =>
-      tone === 'error' ? theme.palette.error.dark
+      tone === 'error' ? theme.palette.error.main
       : tone === 'warning' ? theme.palette.warning.dark
       : theme.palette.grey[200]};
   border-radius: 8px;
   color: ${({ theme, tone }) =>
-    tone === 'error' ? theme.palette.error.dark : theme.palette.text.primary};
+    tone === 'error' ? '#7f1d1d' : theme.palette.text.primary};
   display: grid;
   font-size: 12px;
   gap: 8px;
@@ -278,6 +272,7 @@ const WarningItem = styled.li`
 export function PublishReadinessAIReview({
   controller,
 }: PublishReadinessAIReviewProps) {
+  const { t } = useTranslation();
   const isLoading = controller.state === 'loading';
   const isError = controller.state === 'error';
   const isUnavailable = controller.state === 'unavailable';
@@ -286,7 +281,7 @@ export function PublishReadinessAIReview({
 
   return (
     <Root
-      aria-label="AI review"
+      aria-label={t('publishReadiness.aiReview.title')}
       aria-busy={isLoading ? 'true' : undefined}
     >
       <Header>
@@ -307,18 +302,17 @@ export function PublishReadinessAIReview({
             : <MdAutoFixHigh />}
           </IconBadge>
           <TitleGroup>
-            <Title>AI review</Title>
+            <Title>{t('publishReadiness.aiReview.title')}</Title>
             <Description>
-              Editorial suggestions for SEO, AEO and GEO signals. Deterministic
-              checks still work and human review stays required.
+              {t('publishReadiness.aiReview.description')}
             </Description>
           </TitleGroup>
         </Heading>
 
-        {renderAction(controller)}
+        {renderAction(controller, t)}
       </Header>
 
-      {renderStatus(controller)}
+      {renderStatus(controller, t)}
 
       {controller.summary && (
         <StatusText>
@@ -338,14 +332,18 @@ export function PublishReadinessAIReview({
 
             return (
               <Group key={category}>
-                <GroupTitle>{CATEGORY_LABELS[category]}</GroupTitle>
+                <GroupTitle>
+                  {t(`publishReadiness.aiReview.categories.${category}`)}
+                </GroupTitle>
                 <SuggestionList>
                   {categorySuggestions.map(suggestion => (
                     <SuggestionItem key={suggestion.id}>
                       <SuggestionTitle>{suggestion.title}</SuggestionTitle>
                       {suggestion.currentValue && (
                         <SuggestionBody>
-                          Current: {suggestion.currentValue}
+                          {t('publishReadiness.aiReview.currentValue', {
+                            value: suggestion.currentValue,
+                          })}
                         </SuggestionBody>
                       )}
                       {suggestion.suggestedValue && (
@@ -354,7 +352,13 @@ export function PublishReadinessAIReview({
                         </SuggestedValue>
                       )}
                       <SuggestionBody>{suggestion.rationale}</SuggestionBody>
-                      <Meta>Confidence: {suggestion.confidence}</Meta>
+                      <Meta>
+                        {t('publishReadiness.aiReview.confidence', {
+                          value: t(
+                            `publishReadiness.aiReview.confidenceValues.${suggestion.confidence}`
+                          ),
+                        })}
+                      </Meta>
                     </SuggestionItem>
                   ))}
                 </SuggestionList>
@@ -365,7 +369,7 @@ export function PublishReadinessAIReview({
       )}
 
       {!!warnings.length && (
-        <WarningList aria-label="AI review warnings">
+        <WarningList aria-label={t('publishReadiness.aiReview.warningsLabel')}>
           {warnings.map(warning => (
             <WarningItem key={warning}>
               <MdWarningAmber aria-hidden="true" />
@@ -378,7 +382,10 @@ export function PublishReadinessAIReview({
   );
 }
 
-function renderAction(controller: PublishReadinessAIReviewController) {
+function renderAction(
+  controller: PublishReadinessAIReviewController,
+  t: ReturnType<typeof useTranslation>['t']
+) {
   if (controller.state === 'unavailable') return null;
 
   if (controller.state === 'loading') {
@@ -394,7 +401,7 @@ function renderAction(controller: PublishReadinessAIReviewController) {
           />
         }
       >
-        Reviewing
+        {t('publishReadiness.aiReview.actions.reviewing')}
       </ActionButton>
     );
   }
@@ -407,7 +414,7 @@ function renderAction(controller: PublishReadinessAIReviewController) {
         onClick={controller.onReview}
         startIcon={<MdReplay />}
       >
-        Retry AI review
+        {t('publishReadiness.aiReview.actions.retry')}
       </ActionButton>
     );
   }
@@ -419,12 +426,15 @@ function renderAction(controller: PublishReadinessAIReviewController) {
       onClick={controller.onReview}
       startIcon={<MdAutoFixHigh />}
     >
-      Run AI review
+      {t('publishReadiness.aiReview.actions.run')}
     </ActionButton>
   );
 }
 
-function renderStatus(controller: PublishReadinessAIReviewController) {
+function renderStatus(
+  controller: PublishReadinessAIReviewController,
+  t: ReturnType<typeof useTranslation>['t']
+) {
   if (controller.state === 'ready' || controller.state === 'suggestions') {
     return null;
   }
@@ -433,18 +443,20 @@ function renderStatus(controller: PublishReadinessAIReviewController) {
     return (
       <StatusText>
         <MdInfoOutline aria-hidden="true" />
-        <span>Requesting structured editorial suggestions.</span>
+        <span>{t('publishReadiness.aiReview.loading')}</span>
       </StatusText>
     );
   }
 
   if (controller.state === 'error') {
     return (
-      <StatusText tone="error">
+      <StatusText
+        role="alert"
+        tone="error"
+      >
         <MdErrorOutline aria-hidden="true" />
         <span>
-          {controller.message ??
-            'AI review failed. Deterministic checks remain available.'}
+          {controller.message ?? t('publishReadiness.aiReview.errorFallback')}
         </span>
       </StatusText>
     );
@@ -455,7 +467,7 @@ function renderStatus(controller: PublishReadinessAIReviewController) {
       <MdInfoOutline aria-hidden="true" />
       <span>
         {controller.message ??
-          'Configure an AI provider to run editorial suggestions.'}
+          t('publishReadiness.aiReview.unavailableFallback')}
       </span>
     </StatusText>
   );

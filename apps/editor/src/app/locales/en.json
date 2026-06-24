@@ -1055,12 +1055,39 @@
     "no": "No",
     "publishReadiness": {
       "title": "Publish Intelligence",
-      "description": "Uses deterministic proxy signals only. Semantic quality, factual strength and AI citation likelihood still need human or AI review.",
+      "description": "Automatic checks highlight metadata, opening clarity, source notes and access settings before the final editor pass.",
+      "aiReview": {
+        "title": "AI review",
+        "description": "Editorial guidance for search results, answer engines and citation-ready source context.",
+        "warningsLabel": "AI review warnings",
+        "loading": "Preparing editorial suggestions.",
+        "errorFallback": "Could not generate editorial suggestions. You can continue with the readiness checklist.",
+        "unavailableFallback": "Configure an AI provider to run editorial suggestions.",
+        "empty": "No extra editorial suggestions found. You can continue with the readiness checklist.",
+        "currentValue": "Current: {{value}}",
+        "confidence": "Confidence: {{value}}",
+        "actions": {
+          "run": "Run AI review",
+          "retry": "Retry AI review",
+          "reviewing": "Reviewing"
+        },
+        "categories": {
+          "lead": "Lead and answer",
+          "seo-social": "SEO and social",
+          "aeo-geo": "AEO/GEO clarity",
+          "editorial-risk": "Editorial risks"
+        },
+        "confidenceValues": {
+          "low": "low",
+          "medium": "medium",
+          "high": "high"
+        }
+      },
       "discovery": {
         "title": "Discovery map",
-        "description": "Shows how observable signals support search snippets, answer surfaces, citation trails and access clarity.",
-        "signalProgress": "{{ready}} of {{total}} signals ready",
-        "noSignals": "No signals available for this surface.",
+        "description": "Shows whether the title, intro, sources and access settings are ready for publication.",
+        "signalProgress": "{{ready}} of {{total}} checks ready",
+        "noSignals": "No checks available for this area.",
         "state": {
           "ready": "Ready",
           "review": "Needs work",
@@ -1071,10 +1098,10 @@
             "title": "Search preview"
           },
           "answers": {
-            "title": "Answer readiness"
+            "title": "Opening clarity"
           },
           "citations": {
-            "title": "AI citation trail"
+            "title": "Source trail"
           },
           "access": {
             "title": "Access model"
@@ -1110,8 +1137,8 @@
       "categories": {
         "editorial": "Editorial basics",
         "seo-social": "SEO & social",
-        "aeo": "AEO proxy signals",
-        "geo": "GEO proxy signals"
+        "aeo": "AEO readiness",
+        "geo": "GEO readiness"
       },
       "checks": {
         "slug": {
@@ -1127,7 +1154,7 @@
           "risk": "Lead or description is missing."
         },
         "visible-author": {
-          "pass": "Visible author signal is present.",
+          "pass": "Author is visible.",
           "warning": "Author exists but is hidden from the visible article.",
           "risk": "Author is missing."
         },
@@ -1136,7 +1163,7 @@
           "warning": "No tags are set."
         },
         "image": {
-          "pass": "Image signal is present.",
+          "pass": "Image is available.",
           "warning": "No main or content image was found."
         },
         "hidden": {
@@ -1160,16 +1187,16 @@
           "warning": "Canonical URL is not a valid http(s) URL."
         },
         "opening-context-signals": {
-          "pass": "Opening paragraph has measurable context signals.",
-          "warning": "Opening paragraph has weak measurable context signals."
+          "pass": "Opening paragraph gives concrete context.",
+          "warning": "Opening paragraph needs more concrete context."
         },
         "headings": {
           "pass": "Headings or list structure are present.",
           "warning": "No heading or list structure was found."
         },
         "named-signals": {
-          "pass": "Visible text contains names, numbers, or date-like signals.",
-          "warning": "Visible text has few measurable entity/date/number signals."
+          "pass": "Visible text contains names, numbers, or dates.",
+          "warning": "Visible text could use more names, dates, or numbers."
         },
         "publish-date": {
           "pass": "Publish date is set.",

@@ -14,6 +14,40 @@ const theme = createTheme();
 const renderWithTheme = (ui: ReactElement) =>
   render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
 
+jest.mock('react-i18next', () => {
+  const en = jest.requireActual(
+    `${process.cwd()}/apps/editor/src/app/locales/en.json`
+  );
+
+  function readTranslation(key: string) {
+    return key
+      .split('.')
+      .reduce<unknown>(
+        (value, segment) =>
+          value && typeof value === 'object' ?
+            (value as Record<string, unknown>)[segment]
+          : undefined,
+        en.translation
+      );
+  }
+
+  function interpolate(value: string, options?: Record<string, unknown>) {
+    return value.replace(/{{\s*(\w+)\s*}}/g, (_match, name: string) =>
+      String(options?.[name] ?? '')
+    );
+  }
+
+  return {
+    useTranslation: () => ({
+      t: (key: string, options?: Record<string, unknown>) => {
+        const value = readTranslation(key);
+
+        return typeof value === 'string' ? interpolate(value, options) : key;
+      },
+    }),
+  };
+});
+
 describe('PublishReadinessAIReview', () => {
   it('renders unavailable state without implying AI validation', () => {
     renderWithTheme(
@@ -28,9 +62,12 @@ describe('PublishReadinessAIReview', () => {
     expect(screen.getByLabelText('AI review')).toBeInTheDocument();
     expect(screen.getByText('AI review')).toBeInTheDocument();
     expect(
-      screen.getByText(/deterministic checks still work/i)
+      screen.getByText(/Configure an AI provider to run editorial suggestions/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/validated/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/deterministic checks|human review/i)
+    ).not.toBeInTheDocument();
   });
 
   it('runs manual review from ready state', async () => {
@@ -84,6 +121,12 @@ describe('PublishReadinessAIReview', () => {
     expect(
       screen.getByRole('button', { name: /retry ai review/i })
     ).toBeEnabled();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /Provider quota reached/i
+    );
+    expect(getContrastRatio(screen.getByRole('alert'))).toBeGreaterThanOrEqual(
+      4.5
+    );
   });
 
   it('renders grouped suggestions and human-review warnings', () => {

@@ -720,7 +720,7 @@ function ArticleEditor() {
 
       <Modal
         open={isPublishDialogOpen}
-        size="sm"
+        size="lg"
         onClose={() => setPublishDialogOpen(false)}
       >
         <PublishArticlePanel

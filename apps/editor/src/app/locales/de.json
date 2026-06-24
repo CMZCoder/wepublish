@@ -1046,7 +1046,71 @@
     "no": "Nein",
     "publishReadiness": {
       "title": "Publikations-Intelligenz",
-      "description": "Verwendet nur deterministische Proxy-Signale. Semantische Qualität, faktische Stärke und KI-Zitierwahrscheinlichkeit benötigen weiterhin menschliche oder KI-Prüfung.",
+      "description": "Automatische Checks heben Metadaten, Einstiegsklarheit, Quellenhinweise und Zugriffseinstellungen vor der finalen redaktionellen Prüfung hervor.",
+      "aiReview": {
+        "title": "KI-Prüfung",
+        "description": "Redaktionelle Hinweise für Suche, Antwortmaschinen und zitierfähige Quellenkontexte.",
+        "warningsLabel": "Hinweise der KI-Prüfung",
+        "loading": "Redaktionelle Hinweise werden vorbereitet.",
+        "errorFallback": "Redaktionelle Hinweise konnten nicht erstellt werden. Die Publikations-Checkliste kann weiter genutzt werden.",
+        "unavailableFallback": "KI-Anbieter konfigurieren, um redaktionelle Vorschläge auszuführen.",
+        "empty": "Keine zusätzlichen redaktionellen Hinweise gefunden. Die Publikations-Checkliste kann weiter genutzt werden.",
+        "currentValue": "Aktuell: {{value}}",
+        "confidence": "Vertrauen: {{value}}",
+        "actions": {
+          "run": "KI-Prüfung starten",
+          "retry": "KI-Prüfung wiederholen",
+          "reviewing": "Prüfung läuft"
+        },
+        "categories": {
+          "lead": "Lead und Antwort",
+          "seo-social": "SEO und Social",
+          "aeo-geo": "AEO/GEO-Klarheit",
+          "editorial-risk": "Redaktionelle Risiken"
+        },
+        "confidenceValues": {
+          "low": "niedrig",
+          "medium": "mittel",
+          "high": "hoch"
+        }
+      },
+      "discovery": {
+        "title": "Auffindbarkeitskarte",
+        "description": "Zeigt, ob Titel, Einstieg, Quellen und Zugriffseinstellungen für die Publikation bereit sind.",
+        "signalProgress": "{{ready}} von {{total}} Checks bereit",
+        "noSignals": "Keine Checks für diesen Bereich verfügbar.",
+        "state": {
+          "ready": "Bereit",
+          "review": "Zu bearbeiten",
+          "risk": "Risiko"
+        },
+        "channels": {
+          "search": {
+            "title": "Suchvorschau"
+          },
+          "answers": {
+            "title": "Einstiegsklarheit"
+          },
+          "citations": {
+            "title": "Quellenhinweise"
+          },
+          "access": {
+            "title": "Zugriffsmodell"
+          }
+        },
+        "access": {
+          "paywalled": "Artikel mit Paywall",
+          "freeArticle": "Freier Artikel",
+          "openPage": "Offene Seite",
+          "unknown": "Zugriff nicht angegeben"
+        },
+        "accessEvidence": {
+          "paywalled": "Der Artikel nutzt eine Paywall-Auswahl; öffentliche Markup-Signale können gesperrte Abschnitte kennzeichnen.",
+          "freeArticle": "Der Artikel ist offen; es wird keine Markierung für gesperrte Inhalte erwartet.",
+          "openPage": "Die Seite ist offen zugänglich; es wird kein Artikel-Paywall-Signal erwartet.",
+          "unknown": "Inhaltsmetadaten wurden nicht übergeben, daher kann der Zugriff nicht eingeschätzt werden."
+        }
+      },
       "scoreLabel": "Publikations-Score",
       "scoreShortLabel": "Score",
       "categoryProgress": "{{passed}} von {{total}} bestanden",
@@ -1064,8 +1128,8 @@
       "categories": {
         "editorial": "Redaktionelle Grundlagen",
         "seo-social": "SEO & Social",
-        "aeo": "AEO-Proxy-Signale",
-        "geo": "GEO-Proxy-Signale"
+        "aeo": "AEO-Bereitschaft",
+        "geo": "GEO-Bereitschaft"
       },
       "checks": {
         "slug": {
@@ -1081,7 +1145,7 @@
           "risk": "Lead oder Beschreibung fehlt."
         },
         "visible-author": {
-          "pass": "Sichtbares Autor*innen-Signal ist vorhanden.",
+          "pass": "Autor*in ist sichtbar.",
           "warning": "Autor*in ist vorhanden, aber im Artikel ausgeblendet.",
           "risk": "Autor*in fehlt."
         },
@@ -1090,7 +1154,7 @@
           "warning": "Keine Tags gesetzt."
         },
         "image": {
-          "pass": "Bildsignal ist vorhanden.",
+          "pass": "Bild ist vorhanden.",
           "warning": "Kein Haupt- oder Inhaltsbild gefunden."
         },
         "hidden": {
@@ -1114,16 +1178,16 @@
           "warning": "Kanonische URL ist keine gültige http(s)-URL."
         },
         "opening-context-signals": {
-          "pass": "Einstiegsabsatz hat messbare Kontextsignale.",
-          "warning": "Einstiegsabsatz hat schwache messbare Kontextsignale."
+          "pass": "Einstiegsabsatz gibt konkreten Kontext.",
+          "warning": "Einstiegsabsatz braucht mehr konkreten Kontext."
         },
         "headings": {
           "pass": "Überschriften oder Listenstruktur sind vorhanden.",
           "warning": "Keine Überschriften- oder Listenstruktur gefunden."
         },
         "named-signals": {
-          "pass": "Sichtbarer Text enthält Namen, Zahlen oder datumsähnliche Signale.",
-          "warning": "Sichtbarer Text hat wenige messbare Entitäts-, Datums- oder Zahlensignale."
+          "pass": "Sichtbarer Text enthält Namen, Zahlen oder Daten.",
+          "warning": "Sichtbarer Text könnte mehr Namen, Daten oder Zahlen enthalten."
         },
         "publish-date": {
           "pass": "Publikationsdatum ist gesetzt.",

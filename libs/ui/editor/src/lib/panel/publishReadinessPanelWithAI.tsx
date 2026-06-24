@@ -10,10 +10,14 @@ import {
   useReviewPublishReadinessMutation,
 } from '@wepublish/editor/api';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { PublishReadinessInput } from './publishReadiness';
 import { getPublishReadiness } from './publishReadiness';
-import { PublishReadinessPanel } from './publishReadinessPanel';
+import {
+  type PublishReadinessPanelProps,
+  PublishReadinessPanel,
+} from './publishReadinessPanel';
 import {
   type PublishReadinessReviewContext,
   getPublishReadinessReviewContext,
@@ -32,9 +36,12 @@ const CONFIDENCE = new Set(['low', 'medium', 'high']);
 
 export function PublishReadinessPanelWithAI({
   input,
+  variant,
 }: {
   readonly input: PublishReadinessInput;
+  readonly variant?: PublishReadinessPanelProps['variant'];
 }) {
+  const { t } = useTranslation();
   const readiness = useMemo(() => getPublishReadiness(input), [input]);
   const context = useMemo(
     () => getPublishReadinessReviewContext(input, readiness),
@@ -71,9 +78,7 @@ export function PublishReadinessPanelWithAI({
     : {
         state: hasRequestedReview ? 'error' : 'ready',
         message:
-          hasRequestedReview ?
-            'AI review returned no suggestions. Deterministic checks remain available.'
-          : undefined,
+          hasRequestedReview ? t('publishReadiness.aiReview.empty') : undefined,
         onReview,
       };
 
@@ -82,6 +87,7 @@ export function PublishReadinessPanelWithAI({
       input={input}
       result={readiness}
       aiReview={aiReview}
+      variant={variant}
     />
   );
 }

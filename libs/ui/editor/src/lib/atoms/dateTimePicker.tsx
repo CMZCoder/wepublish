@@ -6,15 +6,7 @@ import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import { useTranslation } from 'react-i18next';
 import { MdInfo } from 'react-icons/md';
-import {
-  Button,
-  ButtonGroup,
-  ButtonToolbar,
-  Form,
-  IconButton,
-  Popover as RPopover,
-  Whisper,
-} from 'rsuite';
+import { Button, Form, IconButton, Popover as RPopover, Whisper } from 'rsuite';
 
 export interface DateTimePreset {
   label: string;
@@ -41,9 +33,25 @@ const Popover = styled(RPopover)`
 `;
 
 const PresetsButton = styled(Button)`
-  white-space: break-spaces;
-  padding: 3px;
-  margin: 1px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 4px 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+`;
+
+const Presets = styled.div`
+  clear: both;
+  display: grid;
+  gap: 6px;
+  padding: 8px 5px 0;
+`;
+
+const PresetRow = styled.div`
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
 `;
 
 export function DateTimePicker({
@@ -114,75 +122,93 @@ export function DateTimePicker({
     <>
       <Global
         styles={css`
-          .react-datepicker {
-            color: darkgray;
-            padding: 10px;
-            font-family: arial;
-            border: none;
-            box-shadow: 0 0 5px 0 gray;
-            right: -10px;
-            min-width: 366px;
+          .wepublish-date-time-picker-popper {
+            padding-top: 0;
+            z-index: 1060;
+          }
 
-            &-popper {
-              padding-top: 0;
-              z-index: 5;
-            }
-            &__header {
+          .react-datepicker.wepublish-date-time-picker {
+            background: #fff;
+            border: 1px solid #d9d9e3;
+            border-radius: 8px;
+            box-shadow: 0 14px 34px rgb(22 28 45 / 16%);
+            color: darkgray;
+            font-family: arial;
+            min-width: 390px;
+            padding: 10px;
+
+            .react-datepicker__header {
               background-color: transparent;
               border-bottom: none;
             }
-            &__navigation {
+
+            .react-datepicker__navigation {
               height: 70px;
               width: 66px;
             }
-            &__time-container {
-              right: -90px;
-              border: none;
-              box-shadow: 0 0 5px 0 gray;
+
+            .react-datepicker__time-container {
+              border: 1px solid #e5e5ea;
+              border-radius: 7px;
+              box-shadow: none;
               margin-bottom: 5px;
               margin-left: 10px;
+              overflow: hidden;
+              width: 90px;
             }
-            &__month-container {
+
+            .react-datepicker__time-box {
+              width: 90px !important;
+            }
+
+            .react-datepicker__month-container {
               padding: 5px;
+              width: 260px;
             }
-            &__day {
-              &-name {
-                color: #8e8e99;
-              }
-              &-names {
-                border: none;
-              }
-              &:not(&--selected):hover {
-                background-color: #f2faff;
-              }
+
+            .react-datepicker__day-name {
+              color: #8e8e99;
             }
-            &__today-button {
+
+            .react-datepicker__day-names {
+              border: none;
+            }
+
+            .react-datepicker__day:not(.react-datepicker__day--selected):hover {
+              background-color: #f2faff;
+            }
+
+            .react-datepicker__today-button {
               background-color: transparent;
               color: #216ba5;
-              &:hover {
-                text-decoration: underline;
-              }
             }
-            &__current-month,
-            &-time__header,
-            &-year-header {
+
+            .react-datepicker__today-button:hover {
+              text-decoration: underline;
+            }
+
+            .react-datepicker__current-month,
+            .react-datepicker-time__header,
+            .react-datepicker-year-header {
               color: #8e8e99;
               font-weight: unset;
             }
 
-            &__close-icon::after {
+            .react-datepicker__close-icon::after {
               padding: unset;
             }
 
-            &__input-container {
+            .react-datepicker__input-container {
               margin-bottom: 10px;
               width: unset;
+
               input {
                 background-color: white;
+                border: 1px solid #e5e5ea;
+                border-radius: 5px;
                 outline: none;
                 padding: 7px;
-                border-radius: 5px;
-                border: 1px solid #e5e5ea;
+
                 &:hover,
                 &:focus-visible {
                   border: 1px solid #1675e0;
@@ -190,9 +216,16 @@ export function DateTimePicker({
                 }
               }
             }
+
+            .react-datepicker__children-container {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+            }
           }
 
-          .react-datepicker__time-container
+          .wepublish-date-time-picker
+            .react-datepicker__time-container
             .react-datepicker__time
             .react-datepicker__time-box
             ul.react-datepicker__time-list
@@ -239,9 +272,11 @@ export function DateTimePicker({
         }}
         dateFormat="Pp"
         showTimeSelect
+        calendarClassName="wepublish-date-time-picker"
+        popperClassName="wepublish-date-time-picker-popper"
       >
-        <ButtonToolbar>
-          <ButtonGroup justified>
+        <Presets>
+          <PresetRow>
             {dateButtonPresets.map((datePreset, i) => (
               <PresetsButton
                 key={i}
@@ -251,10 +286,8 @@ export function DateTimePicker({
                 {datePreset.label}
               </PresetsButton>
             ))}
-          </ButtonGroup>
-        </ButtonToolbar>
-        <ButtonToolbar>
-          <ButtonGroup justified>
+          </PresetRow>
+          <PresetRow>
             {timeButtonPresets.map((timePreset, i) => (
               <PresetsButton
                 key={i}
@@ -264,8 +297,8 @@ export function DateTimePicker({
                 {timePreset.label}
               </PresetsButton>
             ))}
-          </ButtonGroup>
-        </ButtonToolbar>
+          </PresetRow>
+        </Presets>
       </DatePicker>
     </>
   );

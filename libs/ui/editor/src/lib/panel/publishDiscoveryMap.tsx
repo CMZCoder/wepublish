@@ -195,15 +195,10 @@ export function PublishDiscoveryMap({
     <DiscoveryMap aria-labelledby="publish-readiness-discovery-map">
       <DiscoveryHeader>
         <DiscoveryTitle id="publish-readiness-discovery-map">
-          {t('publishReadiness.discovery.title', {
-            defaultValue: 'Discovery map',
-          })}
+          {t('publishReadiness.discovery.title')}
         </DiscoveryTitle>
         <DiscoveryDescription>
-          {t('publishReadiness.discovery.description', {
-            defaultValue:
-              'Shows how observable signals support search snippets, answer surfaces, citation trails and access clarity.',
-          })}
+          {t('publishReadiness.discovery.description')}
         </DiscoveryDescription>
       </DiscoveryHeader>
       <DiscoveryGrid>
@@ -218,12 +213,7 @@ export function PublishDiscoveryMap({
               </DiscoveryIcon>
               <div>
                 <DiscoveryChannelTitle>
-                  {t(
-                    `publishReadiness.discovery.channels.${channel.id}.title`,
-                    {
-                      defaultValue: getDiscoveryTitle(channel),
-                    }
-                  )}
+                  {t(`publishReadiness.discovery.channels.${channel.id}.title`)}
                 </DiscoveryChannelTitle>
                 <DiscoveryChannelState>
                   {getDiscoveryState(channel, t)}
@@ -326,31 +316,12 @@ function getDiscoveryIcon(channel: DiscoveryChannel) {
   }
 }
 
-function getDiscoveryTitle(channel: DiscoveryChannel) {
-  switch (channel.id) {
-    case 'search':
-      return 'Search preview';
-    case 'answers':
-      return 'Answer readiness';
-    case 'citations':
-      return 'AI citation trail';
-    case 'access':
-      return 'Access model';
-  }
-}
-
 function getDiscoveryState(
   channel: DiscoveryChannel,
   t: ReturnType<typeof useTranslation>['t']
 ) {
   if (channel.id === 'access') {
-    return t(`publishReadiness.discovery.access.${channel.accessModel}`, {
-      defaultValue:
-        channel.accessModel === 'paywalled' ? 'Paywalled article'
-        : channel.accessModel === 'freeArticle' ? 'Free article'
-        : channel.accessModel === 'openPage' ? 'Open page'
-        : 'Access not supplied',
-    });
+    return t(`publishReadiness.discovery.access.${channel.accessModel}`);
   }
 
   const key =
@@ -358,12 +329,7 @@ function getDiscoveryState(
     : channel.status === 'warning' ? 'review'
     : 'risk';
 
-  return t(`publishReadiness.discovery.state.${key}`, {
-    defaultValue:
-      channel.status === 'pass' ? 'Ready'
-      : channel.status === 'warning' ? 'Needs work'
-      : 'At risk',
-  });
+  return t(`publishReadiness.discovery.state.${key}`);
 }
 
 function getDiscoveryEvidence(
@@ -372,30 +338,17 @@ function getDiscoveryEvidence(
 ) {
   if (channel.id === 'access') {
     return t(
-      `publishReadiness.discovery.accessEvidence.${channel.accessModel}`,
-      {
-        defaultValue:
-          channel.accessModel === 'paywalled' ?
-            'The article uses a paywall selection; public markup can identify gated sections.'
-          : channel.accessModel === 'freeArticle' ?
-            'The article is open; no gated-content marker is expected.'
-          : channel.accessModel === 'openPage' ?
-            'The page is open content; no article paywall signal is expected.'
-          : 'Content metadata was not supplied, so access cannot be inferred.',
-      }
+      `publishReadiness.discovery.accessEvidence.${channel.accessModel}`
     );
   }
 
   if (channel.total === 0) {
-    return t('publishReadiness.discovery.noSignals', {
-      defaultValue: 'No signals available for this surface.',
-    });
+    return t('publishReadiness.discovery.noSignals');
   }
 
   return t('publishReadiness.discovery.signalProgress', {
     ready: channel.ready,
     total: channel.total,
-    defaultValue: `${channel.ready} of ${channel.total} signals ready`,
   });
 }
 
